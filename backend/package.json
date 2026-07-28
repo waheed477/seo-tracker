@@ -1,0 +1,22 @@
+{
+  "name": "seo-os-backend",
+  "version": "0.0.1",
+  "description": "SEO Operating System — Express/MongoDB backend",
+  "main": "server/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "axios": "*",
+    "bcrypt": "*",
+    "cheerio": "*",
+    "cors": "*",
+    "dotenv": "*",
+    "express": "*",
+    "jsonwebtoken": "*",
+    "mongoose": "*",
+    "node-cron": "*"
+  }
+}

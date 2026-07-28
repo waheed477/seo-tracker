@@ -1,0 +1,112 @@
+PROMPT FOR REPLIT — PHASE 0
+
+I'm building "SEO Operating System" — an AI-powered multi-agent SEO
+platform. Full-stack MERN app.
+
+Tech stack (do not deviate from this):
+- Backend: Node.js + Express, MongoDB with Mongoose, JWT auth
+- AI: Groq API for all AI calls (I'll provide GROQ_API_KEY as an env var)
+- Site analysis: axios + cheerio for crawling/parsing HTML — explicitly
+  DO NOT use Puppeteer or any headless browser anywhere in this project.
+- Scheduled jobs: node-cron, running in-process — DO NOT use Redis,
+  BullMQ, or any external queue service. Everything must run as a
+  single Node process.
+- Frontend: React + Vite + Tailwind CSS, Zustand for state, Recharts
+  for charts
+- Deployment target: backend will run on Hugging Face Spaces (Docker,
+  single process, single exposed port, no persistent local disk
+  guaranteed between restarts) — so avoid any architecture that assumes
+  multiple services, local file storage as a database, or sticky
+  in-memory state that must survive a restart.
+
+Please do the following:
+
+1. Set up a monorepo structure:
+   /backend  — Express app
+   /frontend — Vite React app
+
+2. Backend: initialize package.json with express, mongoose, jsonwebtoken,
+   bcrypt, axios, cheerio, node-cron, dotenv, cors. Set up a basic
+   server/index.js that connects to MongoDB (connection string from
+   process.env.MONGO_URI) and starts on process.env.PORT || 5000.
+
+3. Frontend: initialize a Vite + React + TypeScript project with
+   Tailwind configured.
+
+   Design system — use this color palette as Tailwind theme tokens,
+   not inline hex values scattered across components:
+
+   tailwind.config.js theme.extend.colors:
+     navy:      '#0A2947'   // primary — headers, nav, dark backgrounds, primary buttons
+     cream:     '#F3E4C9'   // main light background / page canvas
+     sage:      '#D3D4C0'   // secondary surfaces, cards, borders, dividers
+     clay:      '#8B5E3C'   // accent — CTAs, links, active states, highlights
+
+   Rules to follow:
+   - Navy + cream should carry most of the UI (primary background/text
+     contrast pair). Sage for secondary panels/cards so they sit a
+     level below the main background. Clay reserved ONLY for
+     actionable/accent moments (primary buttons, active nav item,
+     links, badges) — not for large fills, so it stays feeling like an
+     accent, not a second base color.
+   - Dark mode base: navy background, cream text. Light mode base:
+     cream background, navy text. Sage for card surfaces in both.
+   - Don't hardcode hex codes in components — always reference the
+     Tailwind color names (bg-navy, text-cream, etc.) so the whole app
+     stays consistent and themeable.
+   - Typography: pick one characterful heading font (not the default
+     system font) paired with a clean readable body font — this is a
+     professional SEO SaaS product, so lean confident/technical, not
+     playful.
+   - Every button/link needs a visible focus state and sufficient
+     contrast (navy-on-cream and cream-on-navy both pass WCAG AA
+     easily; double-check clay-on-cream text contrast specifically
+     before using it for body text — clay works better as a
+     background/border/icon accent than as small text on cream).
+
+4. Create a root-level file called project_context.md with this
+   exact structure (fill in what's known now, leave placeholders for
+   the rest):
+
+   # Project Context — SEO Operating System
+
+   ## Current Status
+   Phase 0 complete: repo skeleton created.
+
+   ## Tech Stack
+   (list exactly what's installed and why, per constraints above)
+
+   ## Architecture Decisions
+   - No Puppeteer, no Redis/BullMQ — single-process design for HF Spaces
+     compatibility
+   - [add any other decisions made this phase]
+
+   ## Data Models Implemented So Far
+   (none yet)
+
+   ## API Routes Implemented So Far
+   (none yet)
+
+   ## Known Limitations / Things Deliberately Cut
+   - Backlink Agent is out of scope for this build (no free reliable
+     data source) — architecture should allow plugging in a paid
+     provider later if needed, but don't build it now.
+   - Keyword difficulty is AI-estimated, not from real search volume
+     data — must be labeled honestly in the UI later, not presented as
+     real SERP data.
+   - Rank tracking will use Google Search Console's real API data —
+     never scrape Google search results pages directly, under any
+     circumstances, even if it seems easier.
+
+   ## Environment Variables Needed
+   MONGO_URI, PORT, JWT_SECRET, GROQ_API_KEY
+   (add more here as later phases introduce them)
+
+   ## Next Phase
+   Phase 1 — Auth, Workspaces, Sites
+
+5. After finishing, update project_context.md's "Current Status" and
+   "Next Phase" sections to reflect exactly what you just built, and
+   list any deviations you made from these instructions and why.
+
+Do not build any feature logic yet — this phase is setup only.
