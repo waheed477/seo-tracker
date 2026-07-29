@@ -3,6 +3,8 @@ const express   = require('express');
 const mongoose  = require('mongoose');
 const cors      = require('cors');
 
+const { startAuditTimeoutJob } = require('../jobs/auditTimeout');
+
 const app  = express();
 // In production (HF Spaces) this is the single exposed port.
 // For local dev where the Vite frontend already occupies 5000,
@@ -33,7 +35,11 @@ if (!MONGO_URI) {
   console.warn('[WARN] MONGO_URI is not set — all DB operations will fail. Set it in Replit Secrets.');
 } else {
   mongoose.connect(MONGO_URI)
-    .then(() => console.log('[MongoDB] Connected'))
+    .then(() => {
+      console.log('[MongoDB] Connected');
+      // Start background jobs only after DB is ready
+      startAuditTimeoutJob();
+    })
     .catch(err => console.error('[MongoDB] Connection error:', err.message));
 
   mongoose.connection.on('disconnected', () => console.warn('[MongoDB] Disconnected'));

@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Workspaces from './pages/Workspaces';
 import Sites from './pages/Sites';
+import AuditPage from './pages/AuditPage';
 
 export default function App() {
   return (
@@ -18,9 +19,10 @@ export default function App() {
         {/* Protected — wrapped in Shell (sidebar layout) */}
         <Route element={<ProtectedRoute />}>
           <Route element={<Shell />}>
-            <Route path="/"                          element={<Workspaces />} />
-            <Route path="/workspaces/:id/sites"      element={<Sites />} />
-            <Route path="/command-center"            element={<Dashboard />} />
+            <Route path="/"                       element={<Workspaces />} />
+            <Route path="/workspaces/:id/sites"   element={<Sites />} />
+            <Route path="/sites/:siteId/audit"    element={<AuditPage />} />
+            <Route path="/command-center"         element={<Dashboard />} />
           </Route>
         </Route>
 
