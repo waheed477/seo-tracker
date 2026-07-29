@@ -1,9 +1,40 @@
+# ── Node ──────────────────────────────────────────────────────────────────────
 node_modules/
 backend/node_modules/
 frontend/node_modules/
+
+# ── Build output ──────────────────────────────────────────────────────────────
 dist/
 frontend/dist/
+
+# ── Environment files (never commit secrets) ──────────────────────────────────
 .env
 backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.production.local
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
+npm-debug.log*
+
+# ── OS ─────────────────────────────────────────────────────────────────────────
 .DS_Store
+Thumbs.db
+
+# ── IDE ────────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+
+# ── Replit artifacts (removed — project is now portable) ─────────────────────
+.replit
+replit.nix
+replit.md
+.agents/
+attached_assets/
+
+# ── Coverage / cache (never commit) ──────────────────────────────────────────
+coverage/
+.cache/
+.mypy_cache/
+.turbo/

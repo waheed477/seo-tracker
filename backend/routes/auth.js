@@ -1,16 +1,12 @@
-const router  = require('express').Router();
-const bcrypt  = require('bcrypt');
-const jwt     = require('jsonwebtoken');
-const User    = require('../models/User');
+const router = require('express').Router();
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const BCRYPT_ROUNDS = 12;
 
 function signToken(user) {
-  return jwt.sign(
-    { id: user._id, email: user.email, name: user.name },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
+  return jwt.sign({ id: user._id, email: user.email, name: user.name }, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
 
 function safeUser(user) {

@@ -6,7 +6,12 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js"
+    "dev": "node --watch server/index.js",
+    "test": "jest --forceExit --detectOpenHandles",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write \"**/*.js\"",
+    "format:check": "prettier --check \"**/*.js\""
   },
   "dependencies": {
     "axios": "*",
@@ -18,5 +23,17 @@
     "jsonwebtoken": "*",
     "mongoose": "*",
     "node-cron": "*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/jest": "^30.0.0",
+    "@types/supertest": "^7.2.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.8.0",
+    "jest": "^30.4.2",
+    "mongodb-memory-server": "^11.2.0",
+    "prettier": "^3.9.6",
+    "supertest": "^7.2.2"
   }
 }

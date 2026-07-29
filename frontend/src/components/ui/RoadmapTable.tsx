@@ -21,7 +21,12 @@ const PHASES: Phase[] = [
     name: 'Phase 1',
     description: 'Auth, Workspaces & Sites',
     status: 'next',
-    features: ['JWT auth (register / login)', 'User workspaces model', 'Site management CRUD', 'Protected route guards'],
+    features: [
+      'JWT auth (register / login)',
+      'User workspaces model',
+      'Site management CRUD',
+      'Protected route guards',
+    ],
   },
   {
     id: '2',
@@ -55,65 +60,52 @@ const PHASES: Phase[] = [
 
 const statusBadge: Record<PhaseStatus, string> = {
   complete: 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50',
-  next:     'bg-clay/20 text-clay border-clay/30',
+  next: 'bg-clay/20 text-clay border-clay/30',
   upcoming: 'bg-white/[0.04] text-sage/50 border-white/[0.06]',
 };
 
 const statusLabel: Record<PhaseStatus, string> = {
   complete: 'Complete',
-  next:     'Up Next',
+  next: 'Up Next',
   upcoming: 'Upcoming',
 };
 
 export default function RoadmapTable() {
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-      <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-        <h3 className="font-heading text-sm font-semibold text-cream">Build Roadmap</h3>
-        <span className="text-[10px] text-sage/40">6 phases · 1 complete</span>
+    <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03]">
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+        <h3 className="font-heading text-cream text-sm font-semibold">Build Roadmap</h3>
+        <span className="text-sage/40 text-[10px]">6 phases · 1 complete</span>
       </div>
       <div className="divide-y divide-white/[0.04]">
         {PHASES.map((phase) => (
           <div
             key={phase.id}
-            className={`
-              px-5 py-4 flex gap-4 items-start
-              transition-colors hover:bg-white/[0.02]
-              ${phase.status === 'complete' ? 'opacity-70' : ''}
-            `}
+            className={`flex items-start gap-4 px-5 py-4 transition-colors hover:bg-white/[0.02] ${phase.status === 'complete' ? 'opacity-70' : ''} `}
           >
             {/* Phase indicator */}
             <div className="flex-shrink-0 pt-0.5">
               <div
-                className={`
-                  w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-heading font-bold
-                  ${
-                    phase.status === 'complete'
-                      ? 'bg-emerald-900/40 text-emerald-400'
-                      : phase.status === 'next'
+                className={`font-heading flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-bold ${
+                  phase.status === 'complete'
+                    ? 'bg-emerald-900/40 text-emerald-400'
+                    : phase.status === 'next'
                       ? 'bg-clay/20 text-clay'
-                      : 'bg-white/[0.04] text-sage/40'
-                  }
-                `}
+                      : 'text-sage/40 bg-white/[0.04]'
+                } `}
               >
                 {phase.status === 'complete' ? '✓' : phase.id}
               </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                <span className="font-heading text-sm font-semibold text-cream">
-                  {phase.name}
-                </span>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                <span className="font-heading text-cream text-sm font-semibold">{phase.name}</span>
                 <span className="text-sage/50 text-xs">·</span>
-                <span className="text-xs text-sage/70">{phase.description}</span>
+                <span className="text-sage/70 text-xs">{phase.description}</span>
                 <span
-                  className={`
-                    ml-auto text-[9px] tracking-wider uppercase font-medium
-                    px-2 py-0.5 rounded-full border
-                    ${statusBadge[phase.status]}
-                  `}
+                  className={`ml-auto rounded-full border px-2 py-0.5 text-[9px] font-medium tracking-wider uppercase ${statusBadge[phase.status]} `}
                 >
                   {statusLabel[phase.status]}
                 </span>
@@ -122,7 +114,7 @@ export default function RoadmapTable() {
                 {phase.features.map((f) => (
                   <span
                     key={f}
-                    className="text-[10px] bg-white/[0.04] text-sage/60 px-2 py-0.5 rounded border border-white/[0.04]"
+                    className="text-sage/60 rounded border border-white/[0.04] bg-white/[0.04] px-2 py-0.5 text-[10px]"
                   >
                     {f}
                   </span>

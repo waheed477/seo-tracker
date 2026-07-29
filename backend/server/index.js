@@ -1,24 +1,38 @@
 require('dotenv').config();
-const express   = require('express');
-const mongoose  = require('mongoose');
-const cors      = require('cors');
+const express = require('express');
+const path = require('path');
+const mongoose = require('mongoose');
+const cors = require('cors');
 
 const { startAuditTimeoutJob } = require('../jobs/auditTimeout');
+const { startGscDailySyncJob } = require('../jobs/gscDailySync');
+const { sweepStuckJobs } = require('../jobs/startupSweep');
 
-const app  = express();
-// In production (HF Spaces) this is the single exposed port.
-// For local dev where the Vite frontend already occupies 5000,
-// override with PORT=5001 in .env — the spec default is 5000.
+const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
+
+// CORS: explicit allowed origin — no wildcard '*', even as a fallback.
+// FRONTEND_URL must be set in production. During local dev it defaults
+// to http://localhost:5000 so the Vite proxy works.
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5000';
+app.use(
+  cors({
+    origin: FRONTEND_URL.split(',').map((s) => s.trim()), // supports comma-separated list
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
-// ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',       require('../routes/auth'));
+// ── API Routes ────────────────────────────────────────────────────────────────
+app.use('/api/auth', require('../routes/auth'));
 app.use('/api/workspaces', require('../routes/workspaces'));
-app.use('/api/sites',      require('../routes/sites'));
+app.use('/api/sites', require('../routes/sites'));
+app.use('/api/competitors', require('../routes/competitors'));
+app.use('/api/sites', require('../routes/gsc'));
+app.use('/api/sites', require('../routes/actionPlans'));
+app.use('/api/notifications', require('../routes/notifications'));
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
@@ -29,26 +43,47 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// ── Serve frontend static files in production ─────────────────────────────────
+// When NODE_ENV=production, the Docker container places the Vite build output
+// at /app/frontend/dist/. Express serves these as static files and falls back
+// to index.html for SPA client-side routing (React Router v6).
+if (process.env.NODE_ENV === 'production') {
+  const frontendDist = path.resolve(__dirname, '../../frontend/dist');
+  app.use(express.static(frontendDist));
+
+  // SPA fallback — any non-/api route returns index.html so React Router can handle it
+  app.get('*', (_req, res, next) => {
+    // Skip API routes (they're handled above)
+    if (_req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+}
+
 // ── MongoDB connection ────────────────────────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
-  console.warn('[WARN] MONGO_URI is not set — all DB operations will fail. Set it in Replit Secrets.');
+  console.error('[ERROR] MONGO_URI is not set — the server cannot start without a database connection.');
 } else {
-  mongoose.connect(MONGO_URI)
-    .then(() => {
+  mongoose
+    .connect(MONGO_URI)
+    .then(async () => {
       console.log('[MongoDB] Connected');
-      // Start background jobs only after DB is ready
+      // Sweep any stuck 'running' jobs from a previous container crash
+      await sweepStuckJobs();
       startAuditTimeoutJob();
+      startGscDailySyncJob();
     })
-    .catch(err => console.error('[MongoDB] Connection error:', err.message));
+    .catch((err) => console.error('[MongoDB] Connection error:', err.message));
 
   mongoose.connection.on('disconnected', () => console.warn('[MongoDB] Disconnected'));
-  mongoose.connection.on('reconnected',  () => console.log('[MongoDB] Reconnected'));
+  mongoose.connection.on('reconnected', () => console.log('[MongoDB] Reconnected'));
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`[Server] SEO Operating System backend — port ${PORT}`);
+// Bind to 0.0.0.0 so the server is reachable from outside the container
+// (required for Hugging Face Spaces and any containerised deployment).
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[Server] SEO Operating System — 0.0.0.0:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'})`);
 });
 
 module.exports = app;

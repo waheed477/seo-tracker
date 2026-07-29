@@ -1,6 +1,17 @@
 /**
  * Technical SEO Agent
  *
+ * Crawls a domain and produces a structured technical SEO audit report.
+ * Uses axios + cheerio only — no headless browser, no JavaScript execution.
+ *
+ * What it does:
+ *  1. Fetches and parses robots.txt (respects User-agent: * and our specific UA)
+ *  2. BFS-crawls up to 20 internal pages (400ms polite delay between requests)
+ *  3. Extracts per-page metadata: title tags, meta descriptions, H1 headings, images missing alt text
+ *  4. Fetches and checks sitemap.xml (counts <loc> entries)
+ *  5. HEAD-checks up to 50 uncrawled internal links for broken-link detection
+ *  6. Aggregates all findings into a structured results object
+ *
  * Crawl constraints (architectural, not incidental):
  *  - Max 20 pages per run (hosting resource limit)
  *  - 400 ms polite delay between every HTTP request
@@ -8,14 +19,16 @@
  *  - Respects robots.txt for User-agent: * and our UA
  *  - Broken-link HEAD checks capped at 50 unique internal links
  *  - Single-process, no external queue — runs fully in-memory
+ *
+ * @module services/agents/technicalSeoAgent
  */
 
-const axios   = require('axios');
+const axios = require('axios');
 const cheerio = require('cheerio');
 
 const USER_AGENT = 'SEO-OS-Audit/1.0 (Technical SEO auditing tool; https://github.com/your-repo)';
-const MAX_PAGES  = 20;
-const CRAWL_DELAY_MS  = 400;
+const MAX_PAGES = 20;
+const CRAWL_DELAY_MS = 400;
 const PAGE_TIMEOUT_MS = 10_000;
 const HEAD_TIMEOUT_MS = 5_000;
 const MAX_LINK_CHECKS = 50;
@@ -34,17 +47,14 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 function resolveInternal(href, baseUrl, allowedHosts) {
   if (!href) return null;
   const trimmed = href.trim();
-  if (
-    trimmed.startsWith('#') ||
-    /^(mailto|tel|javascript|data):/i.test(trimmed)
-  ) return null;
+  if (trimmed.startsWith('#') || /^(mailto|tel|javascript|data):/i.test(trimmed)) return null;
 
   try {
     const url = new URL(trimmed, baseUrl);
     if (!['http:', 'https:'].includes(url.protocol)) return null;
     if (!allowedHosts.includes(url.hostname)) return null;
-    url.hash = '';                         // strip fragment
-    url.pathname = url.pathname || '/';    // ensure path exists
+    url.hash = ''; // strip fragment
+    url.pathname = url.pathname || '/'; // ensure path exists
     return url.href;
   } catch {
     return null;
@@ -67,7 +77,7 @@ function parseRobotsTxt(text) {
     const colonIdx = line.indexOf(':');
     if (colonIdx === -1) continue;
 
-    const key   = line.slice(0, colonIdx).trim().toLowerCase();
+    const key = line.slice(0, colonIdx).trim().toLowerCase();
     const value = line.slice(colonIdx + 1).trim();
 
     if (key === 'user-agent') {
@@ -123,7 +133,10 @@ async function fetchSitemap(domain) {
 
 /**
  * Run a full technical SEO audit on `domain`.
- * Returns the structured results object matching the Audit model.
+ *
+ * @param {string} domain - The domain to audit (e.g. "example.com"). Protocol and www prefix are stripped.
+ * @returns {Promise<{pagesCrawled: string[], technical: {missingMetaDescriptions: string[], missingTitleTags: string[], duplicateTitles: {title: string, urls: string[]}[], headingIssues: {url: string, issue: string}[], missingAltText: {url: string, imageCount: number}[], robotsTxt: {found: boolean, disallowsEverything: boolean}, sitemapXml: {found: boolean, urlCount: number}, brokenInternalLinks: {fromUrl: string, brokenUrl: string, status: number|null}[]}}>}
+ *   Structured audit results matching the Audit model schema.
  *
  * Designed to be called fire-and-forget from a route handler;
  * the caller is responsible for writing results to MongoDB.
@@ -137,7 +150,7 @@ async function run(domain) {
 
   // ── 1. Robots.txt ─────────────────────────────────────────────────────────
   let robotsResult = { found: false, disallowsEverything: false };
-  let robots       = { isDisallowed: () => false, disallowsEverything: false };
+  let robots = { isDisallowed: () => false, disallowsEverything: false };
 
   try {
     const { data, status } = await axios.get(`${baseUrl}/robots.txt`, {
@@ -145,7 +158,7 @@ async function run(domain) {
       headers: { 'User-Agent': USER_AGENT },
     });
     if (status < 400 && data) {
-      robots       = parseRobotsTxt(String(data));
+      robots = parseRobotsTxt(String(data));
       robotsResult = { found: true, disallowsEverything: robots.disallowsEverything };
     }
   } catch {
@@ -159,10 +172,10 @@ async function run(domain) {
    * linkMap: brokenUrl → [fromUrl, ...] — tracks where each internal link
    * was discovered so we can report which page contained the broken link.
    */
-  const visited  = new Set();   // URLs successfully fetched
-  const queue    = [`${baseUrl}/`];
-  const linkMap  = new Map();   // url → [fromUrls]
-  const pageData = [];          // per-page extracted metadata
+  const visited = new Set(); // URLs successfully fetched
+  const queue = [`${baseUrl}/`];
+  const linkMap = new Map(); // url → [fromUrls]
+  const pageData = []; // per-page extracted metadata
 
   while (queue.length > 0 && visited.size < MAX_PAGES) {
     const pageUrl = queue.shift();
@@ -204,9 +217,12 @@ async function run(domain) {
       const $ = cheerio.load(data);
 
       // Extract metadata
-      const title       = $('title').first().text().trim();
-      const metaDesc    = ($('meta[name="description"]').attr('content') ?? '').trim();
-      const h1s         = $('h1').map((_, el) => $(el).text().trim()).get().filter(Boolean);
+      const title = $('title').first().text().trim();
+      const metaDesc = ($('meta[name="description"]').attr('content') ?? '').trim();
+      const h1s = $('h1')
+        .map((_, el) => $(el).text().trim())
+        .get()
+        .filter(Boolean);
       const imagesNoAlt = $('img').filter((_, el) => {
         const alt = $(el).attr('alt');
         return alt === undefined || alt === null;
@@ -247,9 +263,7 @@ async function run(domain) {
   const brokenInternalLinks = [];
 
   // Only check links we haven't already crawled (visited = known-good pages)
-  const linksToCheck = [...linkMap.entries()]
-    .filter(([url]) => !visited.has(url))
-    .slice(0, MAX_LINK_CHECKS);
+  const linksToCheck = [...linkMap.entries()].filter(([url]) => !visited.has(url)).slice(0, MAX_LINK_CHECKS);
 
   for (const [brokenUrl, fromUrls] of linksToCheck) {
     try {
@@ -272,8 +286,8 @@ async function run(domain) {
   }
 
   // ── 5. Build aggregated results ───────────────────────────────────────────
-  const missingTitleTags        = pageData.filter(p => !p.title).map(p => p.url);
-  const missingMetaDescriptions = pageData.filter(p => !p.metaDesc).map(p => p.url);
+  const missingTitleTags = pageData.filter((p) => !p.title).map((p) => p.url);
+  const missingMetaDescriptions = pageData.filter((p) => !p.metaDesc).map((p) => p.url);
 
   // Duplicate titles: group pages sharing the same non-empty title
   const titleGroups = {};
@@ -285,16 +299,16 @@ async function run(domain) {
     .filter(([, urls]) => urls.length > 1)
     .map(([title, urls]) => ({ title, urls }));
 
-  const headingIssues = pageData.flatMap(p => {
+  const headingIssues = pageData.flatMap((p) => {
     const issues = [];
     if (p.h1s.length === 0) issues.push({ url: p.url, issue: 'No H1 tag found' });
-    if (p.h1s.length > 1)  issues.push({ url: p.url, issue: `${p.h1s.length} H1 tags (should be one)` });
+    if (p.h1s.length > 1) issues.push({ url: p.url, issue: `${p.h1s.length} H1 tags (should be one)` });
     return issues;
   });
 
   const missingAltText = pageData
-    .filter(p => p.imagesNoAlt > 0)
-    .map(p => ({ url: p.url, imageCount: p.imagesNoAlt }));
+    .filter((p) => p.imagesNoAlt > 0)
+    .map((p) => ({ url: p.url, imageCount: p.imagesNoAlt }));
 
   return {
     pagesCrawled: [...visited],

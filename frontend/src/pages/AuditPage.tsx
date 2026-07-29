@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { auditApi, siteApi, Audit, AuditTechnical, Site } from '../lib/api';
+import { auditApi, siteApi, Audit, AuditTechnical, Site } from '../api/api';
 import { useAuthStore } from '../store/authStore';
+import { useToastStore } from '../store/toastStore';
 import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -27,12 +29,14 @@ function score(t: AuditTechnical, pageCount: number): number {
 // ── Sub-components ────────────────────────────────────────────────────────────
 function ScoreBadge({ value }: { value: number }) {
   const color =
-    value >= 80 ? 'text-emerald-400 border-emerald-800/60 bg-emerald-900/30' :
-    value >= 50 ? 'text-amber-400 border-amber-800/60 bg-amber-900/30' :
-                  'text-red-400 border-red-800/60 bg-red-900/30';
+    value >= 80
+      ? 'text-emerald-400 border-emerald-800/60 bg-emerald-900/30'
+      : value >= 50
+        ? 'text-amber-400 border-amber-800/60 bg-amber-900/30'
+        : 'text-red-400 border-red-800/60 bg-red-900/30';
   return (
-    <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${color}`}>
-      <span className="font-heading font-bold text-xl">{value}</span>
+    <div className={`flex h-16 w-16 items-center justify-center rounded-full border-2 ${color}`}>
+      <span className="font-heading text-xl font-bold">{value}</span>
     </div>
   );
 }
@@ -49,26 +53,29 @@ function IssueSection({ title, count, severity, children, empty }: SectionProps)
   const [open, setOpen] = useState(count > 0);
 
   const badge = {
-    error:   'bg-red-900/40 text-red-400 border-red-800/50',
+    error: 'bg-red-900/40 text-red-400 border-red-800/50',
     warning: 'bg-amber-900/40 text-amber-400 border-amber-800/50',
-    info:    'bg-sky-900/40 text-sky-400 border-sky-800/50',
+    info: 'bg-sky-900/40 text-sky-400 border-sky-800/50',
   }[severity];
 
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02]">
       <button
-        onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-5 py-4 transition-colors hover:bg-white/[0.02]"
       >
         <div className="flex items-center gap-3">
-          <span className="font-heading text-sm font-semibold text-cream">{title}</span>
-          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${badge}`}>
+          <span className="font-heading text-cream text-sm font-semibold">{title}</span>
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${badge}`}>
             {count} {count === 1 ? 'issue' : 'issues'}
           </span>
         </div>
         <svg
-          viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"
-          className={`w-4 h-4 text-sage/40 transition-transform ${open ? 'rotate-180' : ''}`}
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className={`text-sage/40 h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
         >
           <path d="M4 6l4 4 4-4" />
         </svg>
@@ -76,9 +83,7 @@ function IssueSection({ title, count, severity, children, empty }: SectionProps)
 
       {open && (
         <div className="border-t border-white/[0.06] px-5 py-4">
-          {count === 0
-            ? <p className="text-sm text-sage/50 italic">{empty ?? 'No issues found.'}</p>
-            : children}
+          {count === 0 ? <p className="text-sage/50 text-sm italic">{empty ?? 'No issues found.'}</p> : children}
         </div>
       )}
     </div>
@@ -90,12 +95,14 @@ function UrlList({ urls, max = 10 }: { urls: string[]; max?: number }) {
   const visible = showAll ? urls : urls.slice(0, max);
   return (
     <div className="space-y-1">
-      {visible.map(u => (
-        <div key={u} className="flex items-center gap-2 py-1 border-b border-white/[0.04] last:border-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-sage/30 flex-shrink-0" />
+      {visible.map((u) => (
+        <div key={u} className="flex items-center gap-2 border-b border-white/[0.04] py-1 last:border-0">
+          <span className="bg-sage/30 h-1.5 w-1.5 flex-shrink-0 rounded-full" />
           <a
-            href={u} target="_blank" rel="noreferrer"
-            className="text-xs text-sage/70 hover:text-clay transition-colors truncate font-mono"
+            href={u}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sage/70 hover:text-clay truncate font-mono text-xs transition-colors"
           >
             {u}
           </a>
@@ -104,7 +111,7 @@ function UrlList({ urls, max = 10 }: { urls: string[]; max?: number }) {
       {urls.length > max && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          className="text-xs text-clay/70 hover:text-clay transition-colors mt-1"
+          className="text-clay/70 hover:text-clay mt-1 text-xs transition-colors"
         >
           + {urls.length - max} more
         </button>
@@ -117,36 +124,42 @@ function UrlList({ urls, max = 10 }: { urls: string[]; max?: number }) {
 function StatusBanner({ audit }: { audit: Audit }) {
   if (audit.status === 'queued') {
     return (
-      <div className="flex items-center gap-3 px-5 py-4 rounded-xl border border-amber-800/40 bg-amber-900/20">
-        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-        <p className="text-sm text-amber-300 font-medium">Audit queued — starting shortly…</p>
+      <div className="flex items-center gap-3 rounded-xl border border-amber-800/40 bg-amber-900/20 px-5 py-4">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+        <p className="text-sm font-medium text-amber-300">Audit queued — starting shortly…</p>
       </div>
     );
   }
   if (audit.status === 'running') {
     return (
-      <div className="flex items-center gap-3 px-5 py-4 rounded-xl border border-sky-800/40 bg-sky-900/20">
-        <svg className="animate-spin w-4 h-4 text-sky-400 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+      <div className="flex items-center gap-3 rounded-xl border border-sky-800/40 bg-sky-900/20 px-5 py-4">
+        <svg className="h-4 w-4 flex-shrink-0 animate-spin text-sky-400" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
         </svg>
         <div>
-          <p className="text-sm text-sky-300 font-medium">Crawling in progress…</p>
-          <p className="text-xs text-sky-400/60 mt-0.5">Checking up to 20 pages — this may take up to 2 minutes.</p>
+          <p className="text-sm font-medium text-sky-300">Crawling in progress…</p>
+          <p className="mt-0.5 text-xs text-sky-400/60">Checking up to 20 pages — this may take up to 2 minutes.</p>
         </div>
       </div>
     );
   }
   if (audit.status === 'failed') {
     return (
-      <div className="flex items-center gap-3 px-5 py-4 rounded-xl border border-red-800/40 bg-red-900/20">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4 text-red-400 flex-shrink-0">
+      <div className="flex items-center gap-3 rounded-xl border border-red-800/40 bg-red-900/20 px-5 py-4">
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="h-4 w-4 flex-shrink-0 text-red-400"
+        >
           <circle cx="8" cy="8" r="6.5" />
           <path d="M8 5v3.5M8 11h.01" />
         </svg>
         <div>
-          <p className="text-sm text-red-300 font-medium">Audit failed</p>
-          {audit.error && <p className="text-xs text-red-400/70 mt-0.5">{audit.error}</p>}
+          <p className="text-sm font-medium text-red-300">Audit failed</p>
+          {audit.error && <p className="mt-0.5 text-xs text-red-400/70">{audit.error}</p>}
         </div>
       </div>
     );
@@ -157,18 +170,22 @@ function StatusBanner({ audit }: { audit: Audit }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function AuditPage() {
   const { siteId } = useParams<{ siteId: string }>();
-  const navigate   = useNavigate();
-  const { token }  = useAuthStore();
+  const navigate = useNavigate();
+  const { token } = useAuthStore();
+  const addToast = useToastStore((s) => s.addToast);
 
-  const [site,        setSite]        = useState<Site | null>(null);
-  const [audit,       setAudit]       = useState<Audit | null>(null);
-  const [launching,   setLaunching]   = useState(false);
+  const [site, setSite] = useState<Site | null>(null);
+  const [audit, setAudit] = useState<Audit | null>(null);
+  const [launching, setLaunching] = useState(false);
   const [launchError, setLaunchError] = useState('');
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = useCallback(() => {
-    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
   }, []);
 
   const fetchLatest = useCallback(async () => {
@@ -183,7 +200,9 @@ export default function AuditPage() {
   // Load site + latest audit on mount
   useEffect(() => {
     if (!token || !siteId) return;
-    siteApi.get(siteId, token).then(r => { if (r.success) setSite(r.data); });
+    siteApi.get(siteId, token).then((r) => {
+      if (r.success) setSite(r.data);
+    });
     fetchLatest();
   }, [token, siteId, fetchLatest]);
 
@@ -205,95 +224,99 @@ export default function AuditPage() {
     setLaunching(true);
     const res = await auditApi.run(siteId, token);
     setLaunching(false);
-    if (!res.success) { setLaunchError(res.error); return; }
+    if (!res.success) {
+      setLaunchError(res.error);
+      addToast('error', `Failed to start audit: ${res.error}`);
+      return;
+    }
+    addToast('success', 'Audit started — crawling in progress…');
     // Optimistically set status to queued while we wait for the first poll
-    setAudit(prev => prev
-      ? { ...prev, status: 'queued', results: undefined, error: undefined }
-      : { _id: res.data.auditId, siteId: siteId!, status: 'queued', createdAt: new Date().toISOString() }
+    setAudit((prev) =>
+      prev
+        ? { ...prev, status: 'queued', results: undefined, error: undefined }
+        : { _id: res.data.auditId, siteId: siteId!, status: 'queued', createdAt: new Date().toISOString() },
     );
     pollRef.current = setInterval(fetchLatest, POLL_INTERVAL_MS);
   }
 
-  const isActive    = audit?.status === 'queued' || audit?.status === 'running';
-  const tech        = audit?.results?.technical;
-  const pages       = audit?.results?.pagesCrawled ?? [];
-  const auditScore  = tech ? score(tech, pages.length) : null;
+  const isActive = audit?.status === 'queued' || audit?.status === 'running';
+  const tech = audit?.results?.technical;
+  const pages = audit?.results?.pagesCrawled ?? [];
+  const auditScore = tech ? score(tech, pages.length) : null;
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl fade-in">
+    <div className="fade-in max-w-4xl p-6 lg:p-8">
       {/* Back */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1.5 text-xs text-sage/50 hover:text-sage/80 transition-colors mb-5"
+        className="text-sage/50 hover:text-sage/80 mb-5 flex items-center gap-1.5 text-xs transition-colors"
       >
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
           <path d="M10 4L6 8l4 4" />
         </svg>
         Back to sites
       </button>
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="mb-6 flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] text-sage/40 uppercase tracking-wider">Technical Audit</span>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="text-sage/40 text-[10px] tracking-wider uppercase">Technical Audit</span>
           </div>
-          <h1 className="font-heading text-xl font-semibold text-cream">
-            {site?.domain ?? 'Loading…'}
-          </h1>
+          <h1 className="font-heading text-cream text-xl font-semibold">{site?.domain ?? 'Loading…'}</h1>
           {audit?.completedAt && audit.status === 'done' && (
-            <p className="text-xs text-sage/50 mt-0.5">
-              Last run {new Date(audit.completedAt).toLocaleString()}
-            </p>
+            <p className="text-sage/50 mt-0.5 text-xs">Last run {new Date(audit.completedAt).toLocaleString()}</p>
           )}
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center gap-3">
           {auditScore !== null && <ScoreBadge value={auditScore} />}
-          <Button
-            size="sm"
-            onClick={handleRunAudit}
-            loading={launching}
-            disabled={isActive}
-          >
+          <Button size="sm" onClick={handleRunAudit} loading={launching} disabled={isActive}>
             {isActive ? 'Running…' : audit ? 'Re-run audit' : 'Run audit'}
           </Button>
         </div>
       </div>
 
       {launchError && (
-        <div className="mb-4 px-4 py-3 rounded-lg bg-red-900/20 border border-red-500/20 text-sm text-red-300">
+        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
           {launchError}
         </div>
       )}
 
       {/* Status banner */}
-      {audit && (audit.status !== 'done') && (
-        <div className="mb-6"><StatusBanner audit={audit} /></div>
+      {audit && audit.status !== 'done' && (
+        <div className="mb-6">
+          <StatusBanner audit={audit} />
+        </div>
       )}
 
       {/* No audit yet */}
       {!audit && !isActive && (
-        <div className="text-center py-20 border border-dashed border-white/10 rounded-xl">
-          <p className="text-sage/50 text-sm">No audit run yet</p>
-          <p className="text-sage/30 text-xs mt-1">Click "Run audit" to crawl this site and surface technical issues.</p>
-        </div>
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-clay h-7 w-7">
+              <path d="M3 12l2.5-5 2.5 3 2.5-7L13 12" />
+            </svg>
+          }
+          title="No audit run yet"
+          description="Run a technical audit to crawl this site and surface SEO issues across up to 20 pages."
+        />
       )}
 
       {/* Results */}
       {audit?.status === 'done' && tech && (
         <div className="space-y-4">
           {/* Summary strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
+          <div className="mb-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               { label: 'Pages crawled', value: pages.length },
-              { label: 'Total issues',  value: countIssues(tech) },
-              { label: 'Broken links',  value: tech.brokenInternalLinks.length },
-              { label: 'Score',         value: `${auditScore}/100` },
-            ].map(s => (
+              { label: 'Total issues', value: countIssues(tech) },
+              { label: 'Broken links', value: tech.brokenInternalLinks.length },
+              { label: 'Score', value: `${auditScore}/100` },
+            ].map((s) => (
               <div key={s.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-                <p className="text-[10px] text-sage/40 uppercase tracking-wider">{s.label}</p>
-                <p className="font-heading text-lg font-semibold text-cream mt-0.5">{s.value}</p>
+                <p className="text-sage/40 text-[10px] tracking-wider uppercase">{s.label}</p>
+                <p className="font-heading text-cream mt-0.5 text-lg font-semibold">{s.value}</p>
               </div>
             ))}
           </div>
@@ -301,13 +324,19 @@ export default function AuditPage() {
           {/* Robots & Sitemap */}
           <IssueSection
             title="Robots & Sitemap"
-            count={(!tech.robotsTxt.found ? 1 : 0) + (!tech.sitemapXml.found ? 1 : 0) + (tech.robotsTxt.disallowsEverything ? 1 : 0)}
+            count={
+              (!tech.robotsTxt.found ? 1 : 0) +
+              (!tech.sitemapXml.found ? 1 : 0) +
+              (tech.robotsTxt.disallowsEverything ? 1 : 0)
+            }
             severity="warning"
           >
             <div className="space-y-2 text-sm">
               <InfoRow label="robots.txt" ok={tech.robotsTxt.found} okText="Found" failText="Not found" />
               {tech.robotsTxt.disallowsEverything && (
-                <p className="text-xs text-red-400 ml-4">⚠ Disallows all crawlers — search engines cannot index this site.</p>
+                <p className="ml-4 text-xs text-red-400">
+                  ⚠ Disallows all crawlers — search engines cannot index this site.
+                </p>
               )}
               <InfoRow
                 label="sitemap.xml"
@@ -327,22 +356,28 @@ export default function AuditPage() {
             <div className="space-y-4">
               {tech.missingTitleTags.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-cream mb-2">Missing title tags ({tech.missingTitleTags.length})</p>
+                  <p className="text-cream mb-2 text-xs font-semibold">
+                    Missing title tags ({tech.missingTitleTags.length})
+                  </p>
                   <UrlList urls={tech.missingTitleTags} />
                 </div>
               )}
               {tech.missingMetaDescriptions.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-cream mb-2">Missing meta descriptions ({tech.missingMetaDescriptions.length})</p>
+                  <p className="text-cream mb-2 text-xs font-semibold">
+                    Missing meta descriptions ({tech.missingMetaDescriptions.length})
+                  </p>
                   <UrlList urls={tech.missingMetaDescriptions} />
                 </div>
               )}
               {tech.duplicateTitles.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-cream mb-2">Duplicate titles ({tech.duplicateTitles.length} groups)</p>
-                  {tech.duplicateTitles.map(dt => (
+                  <p className="text-cream mb-2 text-xs font-semibold">
+                    Duplicate titles ({tech.duplicateTitles.length} groups)
+                  </p>
+                  {tech.duplicateTitles.map((dt) => (
                     <div key={dt.title} className="mb-3">
-                      <p className="text-xs text-sage/60 italic mb-1">"{dt.title}"</p>
+                      <p className="text-sage/60 mb-1 text-xs italic">"{dt.title}"</p>
                       <UrlList urls={dt.urls} />
                     </div>
                   ))}
@@ -355,12 +390,16 @@ export default function AuditPage() {
           <IssueSection title="Heading Structure" count={tech.headingIssues.length} severity="warning">
             <div className="space-y-1">
               {tech.headingIssues.map((h, i) => (
-                <div key={i} className="flex items-start gap-3 py-1.5 border-b border-white/[0.04] last:border-0">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/30 text-amber-400 border border-amber-800/40 mt-0.5 flex-shrink-0">
+                <div key={i} className="flex items-start gap-3 border-b border-white/[0.04] py-1.5 last:border-0">
+                  <span className="mt-0.5 flex-shrink-0 rounded border border-amber-800/40 bg-amber-900/30 px-1.5 py-0.5 text-[10px] text-amber-400">
                     {h.issue}
                   </span>
-                  <a href={h.url} target="_blank" rel="noreferrer"
-                    className="text-xs text-sage/70 hover:text-clay transition-colors font-mono truncate">
+                  <a
+                    href={h.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sage/70 hover:text-clay truncate font-mono text-xs transition-colors"
+                  >
                     {h.url}
                   </a>
                 </div>
@@ -372,12 +411,19 @@ export default function AuditPage() {
           <IssueSection title="Image Alt Text" count={tech.missingAltText.length} severity="warning">
             <div className="space-y-1">
               {tech.missingAltText.map((img, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0">
-                  <a href={img.url} target="_blank" rel="noreferrer"
-                    className="text-xs text-sage/70 hover:text-clay transition-colors font-mono truncate flex-1">
+                <div
+                  key={i}
+                  className="flex items-center justify-between border-b border-white/[0.04] py-1.5 last:border-0"
+                >
+                  <a
+                    href={img.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sage/70 hover:text-clay flex-1 truncate font-mono text-xs transition-colors"
+                  >
                     {img.url}
                   </a>
-                  <span className="text-[10px] text-sage/40 flex-shrink-0 ml-3">
+                  <span className="text-sage/40 ml-3 flex-shrink-0 text-[10px]">
                     {img.imageCount} image{img.imageCount !== 1 ? 's' : ''} missing alt
                   </span>
                 </div>
@@ -389,20 +435,28 @@ export default function AuditPage() {
           <IssueSection title="Broken Internal Links" count={tech.brokenInternalLinks.length} severity="error">
             <div className="space-y-1">
               {tech.brokenInternalLinks.map((bl, i) => (
-                <div key={i} className="py-2 border-b border-white/[0.04] last:border-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-900/30 text-red-400 border border-red-800/40 flex-shrink-0">
+                <div key={i} className="border-b border-white/[0.04] py-2 last:border-0">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="flex-shrink-0 rounded border border-red-800/40 bg-red-900/30 px-1.5 py-0.5 text-[10px] text-red-400">
                       {bl.status ?? 'ERR'}
                     </span>
-                    <a href={bl.brokenUrl} target="_blank" rel="noreferrer"
-                      className="text-xs text-red-400/80 hover:text-red-300 font-mono truncate">
+                    <a
+                      href={bl.brokenUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="truncate font-mono text-xs text-red-400/80 hover:text-red-300"
+                    >
                       {bl.brokenUrl}
                     </a>
                   </div>
-                  <p className="text-[10px] text-sage/40 ml-1">
+                  <p className="text-sage/40 ml-1 text-[10px]">
                     Found on:{' '}
-                    <a href={bl.fromUrl} target="_blank" rel="noreferrer"
-                      className="hover:text-sage/70 transition-colors font-mono">
+                    <a
+                      href={bl.fromUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-sage/70 font-mono transition-colors"
+                    >
                       {bl.fromUrl}
                     </a>
                   </p>
@@ -413,9 +467,7 @@ export default function AuditPage() {
 
           {/* Pages crawled */}
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-            <p className="font-heading text-sm font-semibold text-cream mb-3">
-              Pages crawled ({pages.length})
-            </p>
+            <p className="font-heading text-cream mb-3 text-sm font-semibold">Pages crawled ({pages.length})</p>
             <UrlList urls={pages} max={15} />
           </div>
         </div>
@@ -427,9 +479,9 @@ export default function AuditPage() {
 function InfoRow({ label, ok, okText, failText }: { label: string; ok: boolean; okText: string; failText: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-sage/60 w-24">{label}</span>
+      <span className="text-sage/60 w-24 text-xs">{label}</span>
       <span className={`flex items-center gap-1.5 text-xs ${ok ? 'text-emerald-400' : 'text-red-400'}`}>
-        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${ok ? 'bg-emerald-400' : 'bg-red-400'}`} />
+        <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${ok ? 'bg-emerald-400' : 'bg-red-400'}`} />
         {ok ? okText : failText}
       </span>
     </div>

@@ -1,14 +1,22 @@
-const router             = require('express').Router();
-const requireAuth        = require('../middleware/auth');
-const Workspace          = require('../models/Workspace');
-const Site               = require('../models/Site');
-const Audit              = require('../models/Audit');
-const technicalSeoAgent  = require('../services/agents/technicalSeoAgent');
+const router = require('express').Router();
+const requireAuth = require('../middleware/auth');
+const Workspace = require('../models/Workspace');
+const Site = require('../models/Site');
+const Audit = require('../models/Audit');
+const Keyword = require('../models/Keyword');
+const technicalSeoAgent = require('../services/agents/technicalSeoAgent');
+const keywordResearchAgent = require('../services/agents/keywordResearchAgent');
+const contentSeoAgent = require('../services/agents/contentSeoAgent');
+const { createNotification } = require('../lib/notify');
 
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/i;
 
 function normalizeDomain(raw) {
-  return String(raw).replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase().trim();
+  return String(raw)
+    .replace(/^https?:\/\//, '')
+    .replace(/\/$/, '')
+    .toLowerCase()
+    .trim();
 }
 
 /** Shared membership guard */
@@ -18,7 +26,7 @@ async function requireMembership(workspaceId, userId, res) {
     res.status(404).json({ success: false, error: 'Workspace not found' });
     return null;
   }
-  const isMember = workspace.members.some(m => m.userId.toString() === userId);
+  const isMember = workspace.members.some((m) => m.userId.toString() === userId);
   if (!isMember) {
     res.status(403).json({ success: false, error: 'Not a member of this workspace' });
     return null;
@@ -41,7 +49,6 @@ async function requireSiteAccess(siteId, userId, res) {
 /**
  * Fire-and-forget audit runner.
  * Called after the HTTP response is sent so the request handler is not blocked.
- * Pattern reused by later phases (Keyword Agent, etc.).
  */
 async function runAuditAsync(auditId, domain) {
   try {
@@ -59,6 +66,28 @@ async function runAuditAsync(auditId, domain) {
     });
 
     console.log(`[Audit] ${auditId} completed — ${results.pagesCrawled.length} pages crawled`);
+
+    // ── Notification: audit_complete ──────────────────────────────────────
+    const audit = await Audit.findById(auditId).lean();
+    if (audit) {
+      const site = await Site.findById(audit.siteId).lean();
+      if (site) {
+        const issueCount = results.technical
+          ? results.technical.missingTitleTags.length +
+            results.technical.missingMetaDescriptions.length +
+            results.technical.duplicateTitles.length +
+            results.technical.headingIssues.length +
+            results.technical.missingAltText.length +
+            results.technical.brokenInternalLinks.length
+          : 0;
+        await createNotification(
+          site.workspaceId.toString(),
+          'audit_complete',
+          `Technical audit of ${site.domain} complete — ${issueCount} issue${issueCount !== 1 ? 's' : ''} found across ${results.pagesCrawled.length} pages.`,
+          site._id.toString(),
+        );
+      }
+    }
   } catch (err) {
     await Audit.findByIdAndUpdate(auditId, {
       status: 'failed',
@@ -116,14 +145,11 @@ router.get('/', async (req, res) => {
 });
 
 // ── POST /api/sites/:id/audit ─────────────────────────────────────────────────
-// Creates an Audit doc (status: queued), responds immediately with auditId,
-// then fires the crawl asynchronously (fire-and-forget pattern).
 router.post('/:id/audit', async (req, res) => {
   try {
     const site = await requireSiteAccess(req.params.id, req.user.id, res);
     if (!site) return;
 
-    // Prevent stacking multiple running audits on the same site
     const inProgress = await Audit.findOne({
       siteId: site._id,
       status: { $in: ['queued', 'running'] },
@@ -137,11 +163,7 @@ router.post('/:id/audit', async (req, res) => {
     }
 
     const audit = await Audit.create({ siteId: site._id });
-
-    // Respond immediately — do not await the crawl
     res.status(202).json({ success: true, data: { auditId: audit._id } });
-
-    // Fire and forget
     runAuditAsync(audit._id, site.domain).catch(console.error);
   } catch (err) {
     console.error('[Sites] audit create error:', err.message);
@@ -150,7 +172,6 @@ router.post('/:id/audit', async (req, res) => {
 });
 
 // ── GET /api/sites/:id/audit/latest ──────────────────────────────────────────
-// Returns the most recent Audit for this site (used by frontend polling).
 router.get('/:id/audit/latest', async (req, res) => {
   try {
     const site = await requireSiteAccess(req.params.id, req.user.id, res);
@@ -164,6 +185,130 @@ router.get('/:id/audit/latest', async (req, res) => {
   } catch (err) {
     console.error('[Sites] audit latest error:', err.message);
     res.status(500).json({ success: false, error: 'Failed to fetch audit' });
+  }
+});
+
+// ── POST /api/sites/:id/keywords ──────────────────────────────────────────────
+router.post('/:id/keywords', async (req, res) => {
+  try {
+    const site = await requireSiteAccess(req.params.id, req.user.id, res);
+    if (!site) return;
+
+    const { seedKeywords } = req.body;
+    if (!seedKeywords || !Array.isArray(seedKeywords) || seedKeywords.length === 0) {
+      return res.status(400).json({ success: false, error: 'seedKeywords must be a non-empty array of strings' });
+    }
+
+    const cleaned = seedKeywords.map((k) => String(k).trim().toLowerCase()).filter((k) => k.length > 0);
+
+    if (cleaned.length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid seed keywords provided' });
+    }
+
+    const results = await keywordResearchAgent.run(cleaned, site.domain);
+
+    const saved = [];
+    for (const kw of results) {
+      const doc = await Keyword.findOneAndUpdate(
+        { siteId: site._id, keyword: kw.keyword },
+        {
+          siteId: site._id,
+          keyword: kw.keyword,
+          cluster: kw.cluster,
+          intent: kw.intent,
+          difficultyEstimate: kw.difficultyEstimate,
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true },
+      );
+      saved.push(doc);
+    }
+
+    res.json({ success: true, data: saved });
+  } catch (err) {
+    console.error('[Sites] keyword research error:', err.message);
+    res.status(500).json({ success: false, error: err.message ?? 'Failed to run keyword research' });
+  }
+});
+
+// ── GET /api/sites/:id/keywords/clusters ──────────────────────────────────────
+router.get('/:id/keywords/clusters', async (req, res) => {
+  try {
+    const site = await requireSiteAccess(req.params.id, req.user.id, res);
+    if (!site) return;
+
+    const keywords = await Keyword.find({ siteId: site._id }).sort({ cluster: 1, keyword: 1 });
+
+    const clusters = {};
+    for (const kw of keywords) {
+      const name = kw.cluster;
+      if (!clusters[name]) clusters[name] = [];
+      clusters[name].push({
+        _id: kw._id,
+        keyword: kw.keyword,
+        intent: kw.intent,
+        difficultyEstimate: kw.difficultyEstimate,
+        createdAt: kw.createdAt,
+      });
+    }
+
+    res.json({ success: true, data: clusters });
+  } catch (err) {
+    console.error('[Sites] keyword clusters error:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to fetch keyword clusters' });
+  }
+});
+
+// ── POST /api/sites/:id/content-review ───────────────────────────────────────
+router.post('/:id/content-review', async (req, res) => {
+  try {
+    const site = await requireSiteAccess(req.params.id, req.user.id, res);
+    if (!site) return;
+
+    const { content, targetKeywords, pageUrl } = req.body;
+
+    if (!targetKeywords || !Array.isArray(targetKeywords) || targetKeywords.length === 0) {
+      return res.status(400).json({ success: false, error: 'targetKeywords must be a non-empty array of strings' });
+    }
+
+    let contentToAnalyze = content;
+
+    if (pageUrl && !contentToAnalyze) {
+      const audit = await Audit.findOne({ siteId: site._id, status: 'done' }).sort({ createdAt: -1 });
+      if (audit && audit.results?.pagesCrawled?.includes(pageUrl)) {
+        try {
+          const axiosLib = require('axios');
+          const cheerio = require('cheerio');
+          const { data } = await axiosLib.get(pageUrl, {
+            timeout: 10_000,
+            headers: { 'User-Agent': 'SEO-OS-Audit/1.0' },
+          });
+          const $ = cheerio.load(data);
+          contentToAnalyze = $('body').text().replace(/\s+/g, ' ').trim();
+        } catch {
+          return res.status(400).json({
+            success: false,
+            error: `Could not fetch content from ${pageUrl} — please paste the content manually`,
+          });
+        }
+      }
+    }
+
+    if (!contentToAnalyze || contentToAnalyze.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Content is required — paste it in or provide a pageUrl' });
+    }
+
+    const cleanedKeywords = targetKeywords.map((k) => String(k).trim().toLowerCase()).filter((k) => k.length > 0);
+
+    if (cleanedKeywords.length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid target keywords provided' });
+    }
+
+    const results = await contentSeoAgent.run(contentToAnalyze, cleanedKeywords);
+
+    res.json({ success: true, data: results });
+  } catch (err) {
+    console.error('[Sites] content review error:', err.message);
+    res.status(500).json({ success: false, error: err.message ?? 'Failed to run content review' });
   }
 });
 

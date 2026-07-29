@@ -9,7 +9,7 @@ const auditSchema = new mongoose.Schema({
     default: 'queued',
   },
 
-  startedAt:   { type: Date },
+  startedAt: { type: Date },
   completedAt: { type: Date },
 
   /** Populated when status === 'failed' */
@@ -19,32 +19,40 @@ const auditSchema = new mongoose.Schema({
     pagesCrawled: [String],
     technical: {
       missingMetaDescriptions: [String],
-      missingTitleTags:        [String],
-      duplicateTitles: [{
-        title: String,
-        urls:  [String],
-      }],
-      headingIssues: [{
-        url:   String,
-        issue: String,
-      }],
-      missingAltText: [{
-        url:        String,
-        imageCount: Number,
-      }],
+      missingTitleTags: [String],
+      duplicateTitles: [
+        {
+          title: String,
+          urls: [String],
+        },
+      ],
+      headingIssues: [
+        {
+          url: String,
+          issue: String,
+        },
+      ],
+      missingAltText: [
+        {
+          url: String,
+          imageCount: Number,
+        },
+      ],
       robotsTxt: {
-        found:               Boolean,
+        found: Boolean,
         disallowsEverything: Boolean,
       },
       sitemapXml: {
-        found:    Boolean,
+        found: Boolean,
         urlCount: Number,
       },
-      brokenInternalLinks: [{
-        fromUrl:   String,
-        brokenUrl: String,
-        status:    Number, // HTTP status, or null if the request errored
-      }],
+      brokenInternalLinks: [
+        {
+          fromUrl: String,
+          brokenUrl: String,
+          status: Number, // HTTP status, or null if the request errored
+        },
+      ],
     },
   },
 

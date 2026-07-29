@@ -1,7 +1,7 @@
-const router    = require('express').Router();
+const router = require('express').Router();
 const requireAuth = require('../middleware/auth');
 const Workspace = require('../models/Workspace');
-const User      = require('../models/User');
+const User = require('../models/User');
 
 router.use(requireAuth);
 
@@ -52,7 +52,7 @@ router.post('/:id/members', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Workspace not found' });
     }
 
-    const requester = workspace.members.find(m => m.userId.toString() === req.user.id);
+    const requester = workspace.members.find((m) => m.userId.toString() === req.user.id);
     if (!requester || requester.role === 'member') {
       return res.status(403).json({ success: false, error: 'Only owners and admins can add members' });
     }
@@ -62,7 +62,7 @@ router.post('/:id/members', async (req, res) => {
       return res.status(404).json({ success: false, error: 'No account found with that email' });
     }
 
-    const alreadyMember = workspace.members.some(m => m.userId.toString() === targetUser._id.toString());
+    const alreadyMember = workspace.members.some((m) => m.userId.toString() === targetUser._id.toString());
     if (alreadyMember) {
       return res.status(409).json({ success: false, error: 'User is already a member of this workspace' });
     }

@@ -1,2 +1,0 @@
-- [Tailwind v4 + Vite setup](tailwind-v4-vite.md) — v4 requires @tailwindcss/postcss and @import "tailwindcss" with @theme; old @tailwind directives crash
-- [Monorepo npm install](monorepo-npm-install.md) — package-management skill installs to root; sub-packages need their own npm install run via ShellExec
