@@ -124,7 +124,7 @@ export default function Workspaces() {
             return (
               <button
                 key={ws._id}
-                onClick={() => navigate(`/workspaces/${ws._id}/sites`)}
+                onClick={() => navigate(`/app/workspaces/${ws._id}/sites`)}
                 className="group flex w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-4 text-left transition-all hover:border-white/10 hover:bg-white/[0.05]"
               >
                 <div className="flex items-center gap-4">

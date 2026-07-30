@@ -100,7 +100,7 @@ describe('Register form', () => {
     await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith('/app');
     });
   });
 

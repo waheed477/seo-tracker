@@ -27,7 +27,7 @@ export default function Login() {
       return;
     }
     setAuth(result.data.token, result.data.user);
-    navigate('/');
+    navigate('/app');
   }
 
   return (

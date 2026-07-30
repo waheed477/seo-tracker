@@ -23,10 +23,10 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
       <div className="relative mx-auto max-w-3xl px-6 py-12 lg:py-16">
         {/* Logo + back link */}
         <div className="mb-10 flex items-center justify-between">
-          <Link to="/" className="group">
+          <Link to="/app" className="group">
             <Logo variant="compact" theme="dark" />
           </Link>
-          <Link to="/" className="text-sage/50 hover:text-sage/80 flex items-center gap-1.5 text-xs transition-colors">
+          <Link to="/app" className="text-sage/50 hover:text-sage/80 flex items-center gap-1.5 text-xs transition-colors">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
               <path d="M10 4L6 8l4 4" />
             </svg>
@@ -43,7 +43,7 @@ export default function LegalLayout({ title, lastUpdated, children }: LegalLayou
 
         {/* Bottom back link */}
         <div className="mt-12 border-t border-white/[0.06] pt-6">
-          <Link to="/" className="text-clay hover:text-clay/80 text-sm transition-colors">
+          <Link to="/app" className="text-clay hover:text-clay/80 text-sm transition-colors">
             ← Back to SEO Operating System
           </Link>
         </div>

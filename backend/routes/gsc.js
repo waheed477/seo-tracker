@@ -94,16 +94,16 @@ router.get('/:id/gsc/callback', async (req, res) => {
     const { code, error: oauthError } = req.query;
 
     if (oauthError) {
-      return res.redirect(`/sites/${siteId}/rankings?gsc=error&msg=${encodeURIComponent(oauthError)}`);
+      return res.redirect(`/app/sites/${siteId}/rankings?gsc=error&msg=${encodeURIComponent(oauthError)}`);
     }
 
     if (!code) {
-      return res.redirect(`/sites/${siteId}/rankings?gsc=error&msg=No+authorization+code+received`);
+      return res.redirect(`/app/sites/${siteId}/rankings?gsc=error&msg=No+authorization+code+received`);
     }
 
     const site = await Site.findById(siteId);
     if (!site) {
-      return res.redirect(`/sites/${siteId}/rankings?gsc=error&msg=Site+not+found`);
+      return res.redirect(`/app/sites/${siteId}/rankings?gsc=error&msg=Site+not+found`);
     }
 
     // Exchange code for tokens
@@ -124,10 +124,10 @@ router.get('/:id/gsc/callback', async (req, res) => {
     });
 
     // Redirect back to the frontend rankings page with success indicator
-    res.redirect(`/sites/${siteId}/rankings?gsc=connected`);
+    res.redirect(`/app/sites/${siteId}/rankings?gsc=connected`);
   } catch (err) {
     console.error('[GSC] callback error:', err.message);
-    res.redirect(`/sites/${req.params.id}/rankings?gsc=error&msg=${encodeURIComponent(err.message)}`);
+    res.redirect(`/app/sites/${req.params.id}/rankings?gsc=error&msg=${encodeURIComponent(err.message)}`);
   }
 });
 

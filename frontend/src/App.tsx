@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Shell from './components/layout/Shell';
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -22,7 +23,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
+        {/* Public landing page */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
@@ -36,15 +40,15 @@ export default function App() {
         {/* Protected — wrapped in Shell (sidebar layout) */}
         <Route element={<ProtectedRoute />}>
           <Route element={<Shell />}>
-            <Route path="/" element={<Workspaces />} />
-            <Route path="/workspaces/:id/sites" element={<Sites />} />
-            <Route path="/sites/:siteId/audit" element={<AuditPage />} />
-            <Route path="/sites/:siteId/keywords" element={<KeywordPage />} />
-            <Route path="/sites/:siteId/content" element={<ContentReviewPage />} />
-            <Route path="/sites/:siteId/competitors" element={<CompetitorPage />} />
-            <Route path="/sites/:siteId/rankings" element={<RankingsPage />} />
-            <Route path="/sites/:siteId/action-plan" element={<ActionPlanPage />} />
-            <Route path="/command-center" element={<Dashboard />} />
+            <Route path="/app" element={<Workspaces />} />
+            <Route path="/app/workspaces/:id/sites" element={<Sites />} />
+            <Route path="/app/sites/:siteId/audit" element={<AuditPage />} />
+            <Route path="/app/sites/:siteId/keywords" element={<KeywordPage />} />
+            <Route path="/app/sites/:siteId/content" element={<ContentReviewPage />} />
+            <Route path="/app/sites/:siteId/competitors" element={<CompetitorPage />} />
+            <Route path="/app/sites/:siteId/rankings" element={<RankingsPage />} />
+            <Route path="/app/sites/:siteId/action-plan" element={<ActionPlanPage />} />
+            <Route path="/app/command-center" element={<Dashboard />} />
           </Route>
         </Route>
 

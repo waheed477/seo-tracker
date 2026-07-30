@@ -64,7 +64,7 @@ export default function Sites() {
     <div className="fade-in max-w-3xl p-6 lg:p-8">
       {/* Back */}
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/app')}
         className="text-sage/50 hover:text-sage/80 mb-5 flex items-center gap-1.5 text-xs transition-colors"
       >
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
@@ -202,7 +202,7 @@ function SiteNavButton({
   const navigate = useNavigate();
   return (
     <button
-      onClick={() => navigate(`/sites/${siteId}/${path}`)}
+      onClick={() => navigate(`/app/sites/${siteId}/${path}`)}
       className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
         primary
           ? 'bg-clay/25 border-clay/40 text-cream hover:bg-clay/35 border font-semibold'

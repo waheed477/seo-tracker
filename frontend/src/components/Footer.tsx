@@ -50,19 +50,19 @@ export default function Footer() {
             <h3 className="font-heading text-cream/80 mb-3 text-xs font-semibold tracking-wider uppercase">Product</h3>
             <ul className="space-y-2">
               <li>
-                <FooterLink to="/command-center">Command Center</FooterLink>
+                <FooterLink to="/app/command-center">Command Center</FooterLink>
               </li>
               <li>
-                <FooterLink to="/">Audits</FooterLink>
+                <FooterLink to="/app">Audits</FooterLink>
               </li>
               <li>
-                <FooterLink to="/">Keywords</FooterLink>
+                <FooterLink to="/app">Keywords</FooterLink>
               </li>
               <li>
-                <FooterLink to="/">Competitors</FooterLink>
+                <FooterLink to="/app">Competitors</FooterLink>
               </li>
               <li>
-                <FooterLink to="/">Action Plan</FooterLink>
+                <FooterLink to="/app">Action Plan</FooterLink>
               </li>
             </ul>
           </div>

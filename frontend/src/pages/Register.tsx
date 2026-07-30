@@ -32,7 +32,7 @@ export default function Register() {
       return;
     }
     setAuth(result.data.token, result.data.user);
-    navigate('/');
+    navigate('/app');
   }
 
   return (

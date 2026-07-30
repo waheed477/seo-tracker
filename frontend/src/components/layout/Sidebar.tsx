@@ -11,14 +11,14 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/', label: 'Workspaces', icon: <GridIcon />, phase: 'Phase 1', live: true },
-  { to: '/command-center', label: 'Command Center', icon: <DashIcon />, phase: 'Phase 1', live: true },
-  { to: '/action-plan', label: 'Action Plan', icon: <PlanIcon />, phase: 'Phase 8', live: false },
-  { to: '/keywords', label: 'Keyword Intelligence', icon: <SearchIcon />, phase: 'Phase 5', live: false },
-  { to: '/content', label: 'Content Agent', icon: <PenIcon />, phase: 'Phase 5', live: false },
-  { to: '/competitors', label: 'Competitor Analysis', icon: <CompIcon />, phase: 'Phase 6', live: false },
-  { to: '/technical', label: 'Technical Audit', icon: <AuditIcon />, phase: 'Phase 2', live: false },
-  { to: '/rank', label: 'Rank Tracker', icon: <ChartIcon />, phase: 'Phase 7', live: false },
+  { to: '/app', label: 'Workspaces', icon: <GridIcon />, phase: 'Phase 1', live: true },
+  { to: '/app/command-center', label: 'Command Center', icon: <DashIcon />, phase: 'Phase 1', live: true },
+  { to: '/app/action-plan', label: 'Action Plan', icon: <PlanIcon />, phase: 'Phase 8', live: false },
+  { to: '/app/keywords', label: 'Keyword Intelligence', icon: <SearchIcon />, phase: 'Phase 5', live: false },
+  { to: '/app/content', label: 'Content Agent', icon: <PenIcon />, phase: 'Phase 5', live: false },
+  { to: '/app/competitors', label: 'Competitor Analysis', icon: <CompIcon />, phase: 'Phase 6', live: false },
+  { to: '/app/technical', label: 'Technical Audit', icon: <AuditIcon />, phase: 'Phase 2', live: false },
+  { to: '/app/rank', label: 'Rank Tracker', icon: <ChartIcon />, phase: 'Phase 7', live: false },
 ];
 
 export default function Sidebar() {
@@ -45,7 +45,7 @@ export default function Sidebar() {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === '/'}
+              end={item.to === '/app'}
               className={({ isActive }) =>
                 `group flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-all duration-150 ${
                   isActive

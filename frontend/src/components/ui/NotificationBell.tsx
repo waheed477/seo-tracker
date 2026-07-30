@@ -93,7 +93,7 @@ export default function NotificationBell() {
     handleMarkRead(n);
     if (n.relatedSiteId) {
       const linkSuffix = TYPE_LINKS[n.type] || '';
-      navigate(`/sites/${n.relatedSiteId}/${linkSuffix}`);
+      navigate(`/app/sites/${n.relatedSiteId}/${linkSuffix}`);
     }
     setOpen(false);
   }
