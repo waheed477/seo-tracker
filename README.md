@@ -135,11 +135,14 @@ Full end-to-end flow: register → create workspace → add site → run audit �
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/waheed000/seo-operator.git
-cd seo-operator
+git clone https://github.com/waheed477/SEO-operator-system.git
+cd SEO-operator-system
 
-# Install all dependencies (root + backend + frontend)
-npm run install:all
+# Install backend dependencies
+cd backend && npm install --legacy-peer-deps --no-fund --no-audit && cd ..
+
+# Install frontend dependencies
+cd frontend && npm install --legacy-peer-deps --no-fund --no-audit && cd ..
 ```
 
 ### 2. Configure Environment
@@ -164,8 +167,11 @@ For Google Search Console rank tracking (optional), also set `GOOGLE_CLIENT_ID`,
 ### 3. Run
 
 ```bash
-# Start both backend and frontend with one command
-npm run dev
+# Terminal 1 — Backend (port 5001)
+cd backend && npm run dev
+
+# Terminal 2 — Frontend (port 5000)
+cd frontend && npm run dev
 ```
 
 - **Backend:** `http://localhost:5001`
@@ -198,8 +204,8 @@ docker run -p 7860:7860 \
 ### Run All Tests
 
 ```bash
-# From project root — runs both backend and frontend tests
-npm test
+cd backend && npm test
+cd frontend && npm test
 ```
 
 ### Backend (35 tests)
@@ -257,28 +263,97 @@ cd frontend && npm test
 ## Project Structure
 
 ```
-├── backend/
-│   ├── server/index.js          # Express app, CORS, routes, static serving
-│   ├── routes/                  # Auth, workspaces, sites, competitors, GSC, action plans, notifications
-│   ├── models/                  # Mongoose schemas (10 models)
-│   ├── services/agents/         # AI agents (technical SEO, keyword, content, competitor, action plan)
-│   ├── services/gscService.js   # Google Search Console OAuth + Search Analytics
-│   ├── jobs/                    # Cron watchdog + startup sweep + GSC daily sync
-│   ├── middleware/auth.js        # JWT auth middleware
-│   ├── lib/                     # Encryption, notifications
-│   └── tests/                   # Jest unit + integration tests
-├── frontend/
+seo-operator/
+├── backend/                          # Express + Mongoose API server
+│   ├── server/
+│   │   └── index.js                  # App entry: Express, CORS, routes, static serving
+│   ├── routes/
+│   │   ├── auth.js                   # Register, login
+│   │   ├── workspaces.js             # Workspace CRUD + members
+│   │   ├── sites.js                  # Site CRUD + audit trigger
+│   │   ├── competitors.js            # Competitor CRUD + gap analysis
+│   │   ├── gsc.js                    # Google Search Console OAuth + rankings
+│   │   ├── actionPlans.js            # Action plan generation + item tracking
+│   │   └── notifications.js          # Workspace notifications
+│   ├── models/
+│   │   ├── User.js                   # email, passwordHash, name
+│   │   ├── Workspace.js              # name, ownerId, members[]
+│   │   ├── Site.js                   # domain, gscConnected, encrypted refresh token
+│   │   ├── Audit.js                  # status, results{technical}
+│   │   ├── Keyword.js                # keyword, cluster, intent, difficulty
+│   │   ├── Competitor.js             # domain, lastCrawledAt
+│   │   ├── ContentGapReport.js       # status, gaps[]
+│   │   ├── RankSnapshot.js           # queryText, avgPosition, clicks, impressions
+│   │   ├── ActionPlan.js             # status, items[], summary
+│   │   └── Notification.js           # type, message, read, relatedSiteId
+│   ├── services/
+│   │   ├── agents/
+│   │   │   ├── technicalSeoAgent.js  # Crawl + audit (axios + cheerio)
+│   │   │   ├── keywordResearchAgent.js  # AI keyword expansion + clustering
+│   │   │   ├── contentSeoAgent.js    # AI content review + readability
+│   │   │   ├── competitorAgent.js    # Crawl competitor + AI gap analysis
+│   │   │   └── actionPlanAgent.js    # Synthesize all data into plan
+│   │   └── gscService.js             # Google OAuth2 + Search Analytics API
+│   ├── jobs/
+│   │   ├── auditTimeout.js           # Cron watchdog (1 min)
+│   │   ├── gscDailySync.js           # Daily GSC data sync (6 AM UTC)
+│   │   └── startupSweep.js           # Mark stuck jobs as failed on boot
+│   ├── middleware/
+│   │   └── auth.js                   # JWT auth middleware
+│   ├── lib/
+│   │   ├── encryption.js             # AES-256-CBC encrypt/decrypt
+│   │   └── notify.js                 # Create workspace notification
+│   └── tests/
+│       ├── unit/                     # authMiddleware, validation
+│       └── integration/              # auth, sites (with mongodb-memory-server)
+│
+├── frontend/                         # React + Vite + TypeScript SPA
 │   ├── src/
-│   │   ├── api/api.ts           # Centralized fetch wrapper (VITE_API_URL)
-│   │   ├── pages/               # 14 page components + test files
-│   │   ├── components/          # Logo, Footer, LegalLayout, UI components
-│   │   ├── store/               # Zustand stores (auth, workspace, toast)
-│   │   └── App.tsx              # Routes
-│   └── vite.config.ts
-├── Dockerfile                   # Multi-stage build for HF Spaces
-├── .editorconfig                # Consistent indentation across editors
-├── .github/workflows/test.yml   # CI: runs backend + frontend tests
-└── project_context.md           # Living architecture document
+│   │   ├── api/
+│   │   │   └── api.ts                # Centralized fetch wrapper (VITE_API_URL)
+│   │   ├── pages/
+│   │   │   ├── LandingPage.tsx       # Public marketing/landing page
+│   │   │   ├── Login.tsx             # Login form
+│   │   │   ├── Register.tsx          # Registration form
+│   │   │   ├── Workspaces.tsx        # Workspace list + create
+│   │   │   ├── Sites.tsx             # Site list + add
+│   │   │   ├── AuditPage.tsx         # Audit results + re-run
+│   │   │   ├── KeywordPage.tsx       # Keyword research + clusters
+│   │   │   ├── ContentReviewPage.tsx # Content SEO review
+│   │   │   ├── CompetitorPage.tsx    # Competitor gap analysis
+│   │   │   ├── RankingsPage.tsx      # GSC rank tracking + charts
+│   │   │   ├── ActionPlanPage.tsx    # Action plan items + status tracking
+│   │   │   ├── Dashboard.tsx         # Command center
+│   │   │   ├── PrivacyPolicy.tsx     # Legal pages
+│   │   │   ├── TermsOfService.tsx
+│   │   │   ├── SecurityPage.tsx
+│   │   │   ├── CookiePolicy.tsx
+│   │   │   └── ContactPage.tsx
+│   │   ├── components/
+│   │   │   ├── auth/                 # ProtectedRoute
+│   │   │   ├── layout/              # Shell (sidebar + header), Sidebar
+│   │   │   ├── ui/                  # Button, Input, EmptyState, LoadingSkeleton,
+│   │   │   │                         # ErrorBoundary, Toast, NotificationBell
+│   │   │   ├── Logo.tsx             # Dancing Script wordmark
+│   │   │   ├── Footer.tsx           # 4-column professional footer
+│   │   │   └── LegalLayout.tsx      # Shared wrapper for legal pages
+│   │   ├── store/
+│   │   │   ├── authStore.ts         # JWT + user (in-memory Zustand)
+│   │   │   ├── workspaceStore.ts    # Current workspace ID
+│   │   │   └── toastStore.ts        # Toast notifications
+│   │   ├── App.tsx                  # Routes (landing + /app/* protected)
+│   │   ├── main.tsx                 # Entry point
+│   │   └── index.css                # Tailwind v4 theme tokens
+│   ├── public/                       # favicon.svg, favicon-16x16.png, favicon-32x32.png
+│   └── vite.config.ts               # Vite + proxy /api → localhost:5001
+│
+├── Dockerfile                        # Multi-stage build for HF Spaces
+├── .dockerignore
+├── netlify.toml                      # SPA fallback + security headers
+├── .editorconfig                     # Consistent indentation
+├── .github/workflows/test.yml        # CI: backend + frontend tests
+├── LICENSE                           # MIT
+└── README.md
 ```
 
 ---

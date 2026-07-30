@@ -323,7 +323,7 @@ Five static content pages, accessible without authentication. All use the `Legal
 |-------|------|--------|---------|
 | Backend | ESLint 10 + Prettier | `backend/eslint.config.cjs`, `backend/.prettierrc` | `npm run lint`, `npm run lint:fix`, `npm run format`, `npm run format:check` |
 | Frontend | ESLint 10 + Prettier | `frontend/eslint.config.cjs`, `frontend/.prettierrc` | `npm run lint`, `npm run lint:fix`, `npm run format`, `npm run format:check` |
-| Root | `.editorconfig` | Consistent indentation across editors | `npm run lint`, `npm run format`, `npm test` (runs both) |
+| Root | `.editorconfig` | Consistent indentation across editors | — |
 
 **Backend ESLint rules:** `prefer-const`, `no-var`, `eqeqeq`, `curly`, `no-debugger`, `no-empty` (no empty catch), `no-cond-assign`, `no-template-curly-in-string`, `no-async-promise-executor`, `no-useless-return`, `no-unused-vars` (warn, underscore-prefixed ignored).
 
@@ -331,15 +331,7 @@ Five static content pages, accessible without authentication. All use the `Legal
 
 **Prettier config (both):** Semi, single quotes, trailing commas, 120 char print width, 2-space indent, LF line endings. Frontend also uses `prettier-plugin-tailwindcss` for class sorting.
 
-**Root-level scripts** (`package.json`):
-
-| Script | What it does |
-|--------|-------------|
-| `npm run install:all` | Installs root + backend + frontend dependencies |
-| `npm run dev` | Runs both dev servers concurrently (backend + frontend) |
-| `npm run lint` | Runs ESLint on both backend and frontend |
-| `npm run format` | Runs Prettier on both backend and frontend |
-| `npm test` | Runs both backend and frontend test suites |
+**Root-level scripts** — removed. No root `package.json` or `node_modules`. Run `npm` commands directly in `backend/` or `frontend/`.
 
 ### Code Cleanup Performed
 
@@ -352,28 +344,28 @@ Five static content pages, accessible without authentication. All use the `Legal
 ### Folder Structure
 
 ```
-/backend
-  /models        — Mongoose schemas (User, Workspace, Site, Audit, Keyword, Competitor, ContentGapReport, RankSnapshot, ActionPlan, Notification)
-  /routes         — Express route handlers (auth, workspaces, sites, competitors, gsc, actionPlans, notifications)
-  /middleware     — Auth middleware (requireAuth)
-  /services
-    /agents       — AI agents (technicalSeoAgent, keywordResearchAgent, contentSeoAgent, competitorAgent, actionPlanAgent)
-    gscService.js — Google Search Console OAuth + Search Analytics
-  /lib            — Shared utilities (encryption.js, notify.js)
-  /jobs           — Cron jobs (auditTimeout, gscDailySync, startupSweep)
-  /server         — Server entry point (index.js)
-  /tests          — Jest tests (unit/ + integration/)
+seo-operator/
+├── backend/                          # Express + Mongoose API server
+│   ├── server/                       # App entry (index.js)
+│   ├── routes/                       # Express route handlers
+│   ├── models/                       # Mongoose schemas (10 models)
+│   ├── services/agents/              # AI agents (5 agents)
+│   ├── services/gscService.js        # Google Search Console OAuth + API
+│   ├── jobs/                         # Cron watchdog, GSC daily sync, startup sweep
+│   ├── middleware/                    # JWT auth middleware
+│   ├── lib/                          # Encryption, notifications
+│   └── tests/                        # Jest unit + integration tests
 
-/frontend
-  /src
-    /api          — Centralized fetch wrapper (api.ts) using VITE_API_URL
-    /pages        — Route page components (+ .test.tsx files)
-    /components   — Reusable UI components (auth/, layout/, ui/) + Logo, Footer, LegalLayout
-    /store        — Zustand stores (authStore, workspaceStore, toastStore)
-    /test         — Test setup (setup.ts)
-    App.tsx       — Root router
-    main.tsx      — Entry point
-    index.css     — Tailwind CSS v4 theme tokens
+├── frontend/                         # React + Vite + TypeScript SPA
+│   ├── src/
+│   │   ├── api/                      # Centralized fetch wrapper
+│   │   ├── pages/                    # Route page components + test files
+│   │   ├── components/               # Logo, Footer, LegalLayout, UI components
+│   │   ├── store/                    # Zustand stores (auth, workspace, toast)
+│   │   ├── App.tsx                   # Routes (landing + /app/* protected)
+│   │   ├── main.tsx                  # Entry point
+│   │   └── index.css                 # Tailwind v4 theme tokens
+│   └── vite.config.ts
 ```
 
 ---
@@ -542,7 +534,7 @@ This file serves as a complete handoff document for anyone picking up the projec
 - **Logo component** uses `@fontsource/dancing-script` (bundled, no external network request) — it's a pure React component, not an imported image. Use `<Logo variant="compact|full" theme="light|dark" />` anywhere.
 - **Legal pages are public routes** — no auth required. They use `LegalLayout` for consistent styling. All legal text is genuinely accurate to the app — no fabricated compliance claims.
 - **Footer appears on all pages** — Login, Register, and authenticated pages via Shell. Legal pages use their own layout with a "Back to app" link instead.
-- **Code quality tooling** — ESLint + Prettier in both backend and frontend. Run `npm run lint` and `npm run format` from root. Note: `@typescript-eslint` doesn't support TS 7.x yet, so frontend ESLint checks config files only; `tsc` handles type-checking.
+- **Code quality tooling** — ESLint + Prettier in both backend and frontend. Run `npm run lint` and `npm run format` from `backend/` or `frontend/`. Note: `@typescript-eslint` doesn't support TS 7.x yet, so frontend ESLint checks config files only; `tsc` handles type-checking.
 - **API wrapper** moved from `src/lib/api.ts` to `src/api/api.ts` — the centralized fetch wrapper using `VITE_API_URL`.
 
 ### Phase 13 — Recruiter Polish

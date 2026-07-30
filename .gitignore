@@ -26,15 +26,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# ── Replit artifacts (removed — project is now portable) ─────────────────────
-.replit
-replit.nix
-replit.md
-.agents/
-attached_assets/
-
-# ── Coverage / cache (never commit) ──────────────────────────────────────────
+# ── Coverage / cache ──────────────────────────────────────────────────────────
 coverage/
 .cache/
-.mypy_cache/
-.turbo/
