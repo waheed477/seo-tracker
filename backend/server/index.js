@@ -59,25 +59,35 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// ── Validate required environment variables ──────────────────────────────────
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'GROQ_API_KEY', 'SITE_ENCRYPTION_KEY'];
+const missingEnvVars = requiredEnvVars.filter((v) => !process.env[v]);
+if (missingEnvVars.length > 0) {
+  console.error(
+    `[ERROR] Required environment variables not set: ${missingEnvVars.join(', ')}. ` +
+      'Copy backend/.env.example to backend/.env and fill in the values.',
+  );
+  process.exit(1);
+}
+
 // ── MongoDB connection ────────────────────────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI;
-if (!MONGO_URI) {
-  console.error('[ERROR] MONGO_URI is not set — the server cannot start without a database connection.');
-} else {
-  mongoose
-    .connect(MONGO_URI)
-    .then(async () => {
-      console.log('[MongoDB] Connected');
-      // Sweep any stuck 'running' jobs from a previous container crash
-      await sweepStuckJobs();
-      startAuditTimeoutJob();
-      startGscDailySyncJob();
-    })
-    .catch((err) => console.error('[MongoDB] Connection error:', err.message));
+mongoose
+  .connect(MONGO_URI)
+  .then(async () => {
+    console.log('[MongoDB] Connected');
+    // Sweep any stuck 'running' jobs from a previous container crash
+    await sweepStuckJobs();
+    startAuditTimeoutJob();
+    startGscDailySyncJob();
+  })
+  .catch((err) => {
+    console.error('[MongoDB] Connection error:', err.message);
+    console.error('[MongoDB] The server will continue running but database operations will fail.');
+  });
 
-  mongoose.connection.on('disconnected', () => console.warn('[MongoDB] Disconnected'));
-  mongoose.connection.on('reconnected', () => console.log('[MongoDB] Reconnected'));
-}
+mongoose.connection.on('disconnected', () => console.warn('[MongoDB] Disconnected'));
+mongoose.connection.on('reconnected', () => console.log('[MongoDB] Reconnected'));
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 // Bind to 0.0.0.0 so the server is reachable from outside the container
