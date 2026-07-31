@@ -1,19 +1,60 @@
 @import 'tailwindcss';
 
+/* ── Custom variant: class-based dark mode ────────────────────────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ── Design tokens (Tailwind v4 CSS-first theme) ──────────────────────────── */
 @theme {
-  /* Colors */
+  /* ── Brand colours (always available) ─────────────────────────────────── */
   --color-navy: #0a2947;
+  --color-navy-deep: #071d33;
+  --color-navy-light: #123a5e;
   --color-cream: #f3e4c9;
+  --color-cream-soft: #fdfbf6;
   --color-sage: #d3d4c0;
   --color-clay: #8b5e3c;
+  --color-clay-light: #a8794f;
 
-  /* Typography */
+  /* ── Semantic surface colours (light mode defaults) ────────────────────── */
+  --color-bg: #fdfbf6;
+  --color-bg-alt: #f3e4c9;
+  --color-surface: #ffffff;
+  --color-surface-hover: #faf7f0;
+  --color-text-primary: #0a2947;
+  --color-text-secondary: rgba(10, 41, 71, 0.7);
+  --color-text-tertiary: rgba(10, 41, 71, 0.45);
+  --color-border: rgba(139, 94, 60, 0.15);
+  --color-accent: #8b5e3c;
+  --color-accent-hover: #7a5235;
+  --color-accent-text: #ffffff;
+
+  /* ── Typography ───────────────────────────────────────────────────────── */
   --font-heading: 'Space Grotesk', ui-sans-serif, system-ui;
   --font-body: 'Inter', ui-sans-serif, system-ui;
 
-  /* Shadows */
+  /* ── Shadows ──────────────────────────────────────────────────────────── */
   --shadow-card: 0 1px 3px rgba(10, 41, 71, 0.08), 0 4px 16px rgba(10, 41, 71, 0.06);
+  --shadow-card-hover: 0 4px 12px rgba(10, 41, 71, 0.1), 0 8px 32px rgba(10, 41, 71, 0.08);
+  --shadow-elevated: 0 8px 32px rgba(10, 41, 71, 0.12), 0 16px 48px rgba(10, 41, 71, 0.06);
+}
+
+/* ── Dark mode overrides (semantic tokens) ──────────────────────────────────── */
+.dark {
+  --color-bg: #0a2947;
+  --color-bg-alt: #071d33;
+  --color-surface: #123a5e;
+  --color-surface-hover: #1a4570;
+  --color-text-primary: #f3e4c9;
+  --color-text-secondary: rgba(243, 228, 201, 0.7);
+  --color-text-tertiary: rgba(243, 228, 201, 0.45);
+  --color-border: rgba(211, 212, 192, 0.15);
+  --color-accent: #a8794f;
+  --color-accent-hover: #966b42;
+  --color-accent-text: #ffffff;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.25), 0 8px 32px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.3), 0 16px 48px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Base layer ───────────────────────────────────────────────────────────── */
@@ -24,25 +65,21 @@
 
   body {
     font-family: var(--font-body);
-    background-color: var(--color-navy);
-    color: var(--color-cream);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
   }
 
   *:focus-visible {
     outline: none;
     box-shadow:
-      0 0 0 2px var(--color-clay),
-      0 0 0 4px var(--color-navy);
+      0 0 0 2px var(--color-accent),
+      0 0 0 4px var(--color-bg);
   }
 }
 
@@ -65,14 +102,14 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: rgba(10, 41, 71, 0.5);
+    background: var(--color-bg-alt);
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(211, 212, 192, 0.3);
+    background: var(--color-border);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(139, 94, 60, 0.6);
+    background: var(--color-accent);
   }
 
   /* Shimmer loading */
@@ -91,38 +128,33 @@
   .fade-in {
     animation: fadeIn 0.5s ease forwards;
   }
-}
 
-/* ── Keyframes ────────────────────────────────────────────────────────────── */
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-@keyframes fadeIn {
-  from {
+  /* Section reveal */
+  .reveal {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
   }
-  to {
+  .reveal.visible {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* ── Keyframes ────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .animate-slide-in {

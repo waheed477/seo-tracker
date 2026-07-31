@@ -1,19 +1,10 @@
-/**
- * Footer.tsx — Professional footer for SEO Operating System.
- *
- * 4-column layout on desktop, stacked on mobile.
- * Appears on all pages (login, register, authenticated pages).
- * Does NOT appear on distraction-free views (none currently exist).
- *
- * Uses theme colours only: navy, cream, sage, clay.
- */
-
 import { Link } from 'react-router-dom';
 import Logo from './Logo';
 
 /* ── Column link helper ───────────────────────────────────────────────────── */
 function FooterLink({ to, children, external = false }: { to: string; children: React.ReactNode; external?: boolean }) {
-  const cls = 'text-sage/60 hover:text-cream transition-colors text-sm leading-relaxed';
+  const cls =
+    'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors text-sm leading-relaxed';
   if (external) {
     return (
       <a href={to} target="_blank" rel="noopener noreferrer" className={cls}>
@@ -33,21 +24,24 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-navy border-t border-white/[0.06]">
+    <footer className="bg-[var(--color-bg-alt)] border-t border-[var(--color-border)]">
       {/* 4-column grid */}
       <div className="mx-auto max-w-6xl px-6 py-10 lg:py-12">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           {/* Column 1 — Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <Logo variant="full" theme="dark" />
-            <p className="text-sage/60 mt-3 max-w-xs text-sm leading-relaxed">
+            <Logo variant="full" theme="dark" className="dark:block hidden" />
+            <Logo variant="full" theme="light" className="dark:hidden block" />
+            <p className="text-[var(--color-text-secondary)] mt-3 max-w-xs text-sm leading-relaxed">
               AI-powered multi-agent SEO platform. Audit, analyse, and act — all in one place.
             </p>
           </div>
 
           {/* Column 2 — Product */}
           <div>
-            <h3 className="font-heading text-cream/80 mb-3 text-xs font-semibold tracking-wider uppercase">Product</h3>
+            <h3 className="font-heading text-[var(--color-text-primary)] mb-3 text-xs font-semibold tracking-wider uppercase">
+              Product
+            </h3>
             <ul className="space-y-2">
               <li>
                 <FooterLink to="/app/command-center">Command Center</FooterLink>
@@ -69,25 +63,33 @@ export default function Footer() {
 
           {/* Column 3 — Company */}
           <div>
-            <h3 className="font-heading text-cream/80 mb-3 text-xs font-semibold tracking-wider uppercase">Company</h3>
+            <h3 className="font-heading text-[var(--color-text-primary)] mb-3 text-xs font-semibold tracking-wider uppercase">
+              Company
+            </h3>
             <ul className="space-y-2">
               <li>
                 <FooterLink to="/contact">Contact</FooterLink>
               </li>
               <li>
-                <span className="text-sage/30 cursor-default text-sm">About</span>
-                <span className="text-sage/20 ml-1.5 text-[9px] tracking-wider uppercase">coming soon</span>
+                <span className="text-[var(--color-text-tertiary)] cursor-default text-sm">About</span>
+                <span className="text-[var(--color-text-tertiary)] ml-1.5 text-[9px] tracking-wider uppercase opacity-50">
+                  coming soon
+                </span>
               </li>
               <li>
-                <span className="text-sage/30 cursor-default text-sm">Blog</span>
-                <span className="text-sage/20 ml-1.5 text-[9px] tracking-wider uppercase">coming soon</span>
+                <span className="text-[var(--color-text-tertiary)] cursor-default text-sm">Blog</span>
+                <span className="text-[var(--color-text-tertiary)] ml-1.5 text-[9px] tracking-wider uppercase opacity-50">
+                  coming soon
+                </span>
               </li>
             </ul>
           </div>
 
           {/* Column 4 — Legal */}
           <div>
-            <h3 className="font-heading text-cream/80 mb-3 text-xs font-semibold tracking-wider uppercase">Legal</h3>
+            <h3 className="font-heading text-[var(--color-text-primary)] mb-3 text-xs font-semibold tracking-wider uppercase">
+              Legal
+            </h3>
             <ul className="space-y-2">
               <li>
                 <FooterLink to="/privacy-policy">Privacy Policy</FooterLink>
@@ -107,16 +109,17 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-sage/20 border-t">
+      <div className="border-t border-[var(--color-border)]">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-4 sm:flex-row">
-          <p className="text-sage/50 text-xs">© {year} SEO Operating System. All rights reserved.</p>
+          <p className="text-[var(--color-text-tertiary)] text-xs">
+            © {year} SEO Operating System. All rights reserved.
+          </p>
           <div className="flex items-center gap-4">
-            {/* GitHub — real link since this is a portfolio project */}
             <a
-              href="https://github.com/waheed000/seo-operator"
+              href="https://github.com/waheed477/SEO-operator-system"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sage/40 hover:text-cream transition-colors"
+              className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
               title="GitHub"
             >
               <svg viewBox="0 0 16 16" fill="currentColor" className="h-4.5 w-4.5">

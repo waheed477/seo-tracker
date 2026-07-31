@@ -1,7 +1,7 @@
 # Project Context — SEO Operating System
 
 ## Current Status
-**Portfolio-ready.** All 13 phases complete. README rewritten for recruiter/hiring-manager review, MIT LICENSE added, code quality tooling in place, 51 tests passing. Live demo at [https://seo-os.hf.space](https://seo-os.hf.space), repo at [https://github.com/waheed000/seo-operator](https://github.com/waheed000/seo-operator).
+**Portfolio-ready.** All 13 phases complete + premium landing page with light/dark mode. README rewritten for recruiter/hiring-manager review, MIT LICENSE added, code quality tooling in place, 51 tests passing. Live demo at [https://seo-os.hf.space](https://seo-os.hf.space), repo at [https://github.com/waheed477/SEO-operator-system](https://github.com/waheed477/SEO-operator-system).
 
 ---
 
@@ -536,6 +536,60 @@ This file serves as a complete handoff document for anyone picking up the projec
 - **Footer appears on all pages** — Login, Register, and authenticated pages via Shell. Legal pages use their own layout with a "Back to app" link instead.
 - **Code quality tooling** — ESLint + Prettier in both backend and frontend. Run `npm run lint` and `npm run format` from `backend/` or `frontend/`. Note: `@typescript-eslint` doesn't support TS 7.x yet, so frontend ESLint checks config files only; `tsc` handles type-checking.
 - **API wrapper** moved from `src/lib/api.ts` to `src/api/api.ts` — the centralized fetch wrapper using `VITE_API_URL`.
+
+### Landing Page — Premium Redesign
+
+**Location:** `frontend/src/pages/LandingPage.tsx`
+
+A premium, editorial-style landing page with full light/dark mode support. Designed to feel distinctive — not a generic SaaS template.
+
+#### Theme System
+
+- **Class-based dark mode** via `@custom-variant dark` in Tailwind v4's `index.css`
+- **Semantic colour tokens** defined in `@theme` block — all components reference `var(--color-*)` tokens, never raw hex
+- **Dark mode overrides** applied via `.dark` class selector on `<html>`, overriding all semantic tokens
+- **Flash-of-wrong-theme prevention** — inline `<script>` in `index.html` reads localStorage + prefers-color-scheme and sets `dark` class BEFORE React hydrates
+- **ThemeToggle component** (`frontend/src/components/ThemeToggle.tsx`) — sun/moon icon toggle, persists to localStorage key `seo-os-theme`, defaults to system preference on first visit
+
+**Light mode palette:**
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--color-bg` | `#FDFBF6` (cream-soft) | Main background |
+| `--color-bg-alt` | `#F3E4C9` (cream) | Alternating sections |
+| `--color-surface` | `#FFFFFF` | Cards, elevated surfaces |
+| `--color-text-primary` | `#0A2947` (navy) | Headlines, body text |
+| `--color-text-secondary` | `rgba(10,41,71,0.7)` | Descriptions |
+| `--color-accent` | `#8B5E3C` (clay) | CTAs, highlights |
+
+**Dark mode palette:**
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--color-bg` | `#0A2947` (navy) | Main background |
+| `--color-bg-alt` | `#071D33` (navy-deep) | Alternating sections |
+| `--color-surface` | `#123A5E` (navy-light) | Cards, elevated surfaces |
+| `--color-text-primary` | `#F3E4C9` (cream) | Headlines, body text |
+| `--color-text-secondary` | `rgba(243,228,201,0.7)` | Descriptions |
+| `--color-accent` | `#A8794F` (clay-light) | CTAs, highlights (lightened for contrast on navy) |
+
+#### Landing Page Sections
+
+1. **Navbar** — sticky, backdrop-blur, Logo + ThemeToggle + Sign in + Get Started
+2. **Hero** — bold headline ("Stop juggling. Start optimizing."), supporting description, dual CTAs, interactive dashboard mock (stats, issue bars, progress — built as real HTML/CSS, not an image)
+3. **Problem/Agitation** — "SEO tools are fragmented." — frames the pain point before introducing the solution
+4. **Feature Showcase** — 6 agents presented as alternating image-left/text-right sections, each with custom SVG icon, phase badge, and description. Not a generic icon grid.
+5. **How It Works** — 4-step flow (01–04) with clear numbering
+6. **Trust/Credibility** — honest technical facts (official GSC API, Groq AI, AES-256 encryption, container-safe architecture) — no fabricated testimonials or logos
+7. **Final CTA** — full-width bg-alt section, one clear call to action
+8. **Footer** — reuses existing Footer component, updated to use semantic theme tokens
+
+#### Design Decisions
+
+- **Editorial, not template** — bold oversized typography, asymmetric hero layout, generous whitespace, one dominant moment
+- **Accent used sparingly** — only on CTAs, badges, and key highlights — restraint = design
+- **Real product mock** — the dashboard mock in the hero shows actual audit data (stats, issue bars) — not a stock illustration
+- **Scroll-triggered reveal** — sections fade/slide in via Intersection Observer (CSS `.reveal` + `.visible` classes)
+- **No Framer Motion** — all animations are CSS-only, zero JS animation library overhead
+- **Both themes designed simultaneously** — not dark-first with light patched on
 
 ### Phase 13 — Recruiter Polish
 
