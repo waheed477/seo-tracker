@@ -315,6 +315,57 @@ Five static content pages, accessible without authentication. All use the `Legal
 
 ---
 
+## Data Integrity
+
+**No mock, dummy, or placeholder data exists in active code paths.** The entire application runs against real data flows only.
+
+### Audit Results (2026-07-31)
+
+| Check | Result |
+|-------|--------|
+| Hardcoded sample arrays in backend routes/services | ✅ None found — all data comes from MongoDB or API calls |
+| Seed/fixture scripts | ✅ None exist — no seed scripts, no auto-population on server start |
+| Placeholder text in components ("Lorem ipsum", "Sample Site", etc.) | ✅ None found — all form placeholders are functional hints ("you@example.com", "example.com") |
+| Fake-data fallback logic in frontend | ✅ None found — all pages show real empty states (EmptyState component) when no data exists |
+| Hardcoded API keys/tokens in code | ✅ None found — all secrets in .env files (excluded from git) |
+| Console.log printing debug/mock data | ✅ None found — all console.log in backend are operational logging (startup, cron, audit completion) |
+| Stale scaffolding UI | ✅ Removed — Dashboard.tsx was entirely Phase 0 scaffolding with hardcoded "Phase 0 — Scaffold" badge, StatusCard, RoadmapTable, PalettePreview, and EnvVarPanel. All replaced with real Command Center that fetches workspace/site data from API. |
+
+### Items explicitly kept
+
+| Item | Location | Why it's kept |
+|------|----------|---------------|
+| `DashboardMock` in LandingPage | `frontend/src/pages/LandingPage.tsx` | This is a marketing product visualization on a public landing page — not a data path. It shows a stylized preview of what the audit dashboard looks like. Standard practice (like Figma hero shots on SaaS landing pages). Explicitly labeled as a mock, not confused with real data. |
+| Mock data in test files | `frontend/src/pages/*.test.tsx`, `backend/tests/**` | Test files use mock data by design — they're isolated and never run in production. All API calls are mocked via `vi.mock`/`jest.mock`. |
+| Placeholder values in `.env.example` | `backend/.env.example`, `frontend/.env.example` | Template files with `replace-with-` and `gsk_...` — not real secrets, just documentation. |
+
+### Deleted in this pass
+
+| File | What was removed |
+|------|-----------------|
+| `frontend/src/components/ui/StatusCard.tsx` | Entire component — only used by old Dashboard scaffolding |
+| `frontend/src/components/ui/RoadmapTable.tsx` | Entire component — hardcoded PHASES array from Phase 0, completely stale |
+| `frontend/src/components/ui/PalettePreview.tsx` | Entire component — design token debug tool, only used by old Dashboard |
+| `frontend/src/pages/Dashboard.tsx` | Entire rewrite — replaced Phase 0 scaffolding with real Command Center that fetches workspaces and sites from API |
+
+### Dashboard (Command Center) — Replaced
+
+The old Dashboard was entirely Phase 0 scaffolding with:
+- Hardcoded "Phase 0 — Scaffold" badge
+- StatusCard with hardcoded values ("Express + MongoDB", "Awaiting GROQ_API_KEY")
+- RoadmapTable with hardcoded PHASES array (Phase 0 "complete", Phase 1 "next")
+- PalettePreview showing design token swatches
+- EnvVarPanel with hardcoded `set: false` values and "Set these in Replit Secrets" message
+
+The new Dashboard (Command Center) fetches real data:
+- Workspace count from `workspaceApi.list()`
+- Site count from `siteApi.list()`
+- GSC-connected count from site data
+- Lists real workspaces with navigation to sites
+- Shows EmptyState when no workspaces exist
+
+---
+
 ## Code Quality
 
 ### Linting & Formatting
