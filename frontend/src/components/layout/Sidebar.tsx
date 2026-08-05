@@ -1,71 +1,144 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useMatch, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import Logo from '../Logo';
+import { authApi } from '../../api/api';
 
 type NavItem = {
   to: string;
   label: string;
   icon: React.ReactNode;
-  phase: string;
+  tag: string;
   live: boolean;
+  requiresSite?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/app', label: 'Workspaces', icon: <GridIcon />, phase: 'Phase 1', live: true },
-  { to: '/app/command-center', label: 'Command Center', icon: <DashIcon />, phase: 'Phase 1', live: true },
-  { to: '/app/action-plan', label: 'Action Plan', icon: <PlanIcon />, phase: 'Phase 8', live: false },
-  { to: '/app/keywords', label: 'Keyword Intelligence', icon: <SearchIcon />, phase: 'Phase 5', live: false },
-  { to: '/app/content', label: 'Content Agent', icon: <PenIcon />, phase: 'Phase 5', live: false },
-  { to: '/app/competitors', label: 'Competitor Analysis', icon: <CompIcon />, phase: 'Phase 6', live: false },
-  { to: '/app/technical', label: 'Technical Audit', icon: <AuditIcon />, phase: 'Phase 2', live: false },
-  { to: '/app/rank', label: 'Rank Tracker', icon: <ChartIcon />, phase: 'Phase 7', live: false },
+  { to: '/app', label: 'Workspaces', icon: <GridIcon />, tag: 'Live', live: true },
+  { to: '/app/command-center', label: 'Command Center', icon: <DashIcon />, tag: 'Live', live: true },
+  {
+    to: '/app/sites/:siteId/action-plan',
+    label: 'Action Plan',
+    icon: <PlanIcon />,
+    tag: 'Live',
+    live: true,
+    requiresSite: true,
+  },
+  {
+    to: '/app/sites/:siteId/keywords',
+    label: 'Keyword Intelligence',
+    icon: <SearchIcon />,
+    tag: 'Live',
+    live: true,
+    requiresSite: true,
+  },
+  {
+    to: '/app/sites/:siteId/content',
+    label: 'Content Agent',
+    icon: <PenIcon />,
+    tag: 'Live',
+    live: true,
+    requiresSite: true,
+  },
+  {
+    to: '/app/sites/:siteId/competitors',
+    label: 'Competitor Analysis',
+    icon: <CompIcon />,
+    tag: 'Live',
+    live: true,
+    requiresSite: true,
+  },
+  {
+    to: '/app/sites/:siteId/audit',
+    label: 'Technical Audit',
+    icon: <AuditIcon />,
+    tag: 'Live',
+    live: true,
+    requiresSite: true,
+  },
+  {
+    to: '/app/sites/:siteId/rankings',
+    label: 'Rank Tracker',
+    icon: <ChartIcon />,
+    tag: 'Live',
+    live: true,
+    requiresSite: true,
+  },
 ];
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
+  const match = useMatch('/app/sites/:siteId/*');
+  const currentSiteId = match?.params.siteId as string | undefined;
 
-  function handleLogout() {
-    clearAuth();
-    navigate('/login');
+  function getItemLink(item: NavItem) {
+    if (item.requiresSite && currentSiteId) {
+      return item.to.replace(':siteId', currentSiteId);
+    }
+    return item.to;
+  }
+
+  function itemIsEnabled(item: NavItem) {
+    return item.live && (!item.requiresSite || Boolean(currentSiteId));
+  }
+
+  function itemTag(item: NavItem) {
+    if (item.requiresSite) {
+      return currentSiteId ? 'Live' : 'Select site';
+    }
+    return item.tag;
+  }
+
+  async function handleLogout() {
+    // Must hit the server: the access/refresh tokens live in httpOnly cookies
+    // that JS cannot touch, so clearing local state alone leaves the session
+    // alive — the next page load would silently sign the user back in.
+    // Clear local state regardless of the network result so the UI never
+    // strands the user on a page they think they've logged out of.
+    try {
+      await authApi.logout();
+    } finally {
+      clearAuth();
+      navigate('/login', { replace: true });
+    }
   }
 
   return (
-    <aside className="bg-navy flex w-64 flex-shrink-0 flex-col border-r border-white/[0.06]">
-      {/* Logo */}
-      <div className="border-b border-white/[0.06] px-5 py-5">
-        <Logo variant="compact" theme="dark" />
-      </div>
+    <aside className="flex w-16 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-alt)] lg:w-60">
+      {/* Nav — the brand/logo lives in the top navbar (Shell.tsx), not duplicated here */}
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-4 lg:px-3">
+        <p className="mb-2 hidden px-2 text-[9px] font-medium tracking-widest text-[var(--color-text-tertiary)] uppercase lg:block">
+          Navigation
+        </p>
+        {NAV_ITEMS.map((item) => {
+          const enabled = itemIsEnabled(item);
+          const to = getItemLink(item);
+          const disabledTitle = item.requiresSite && !currentSiteId ? 'Select a site first' : 'Coming soon';
 
-      {/* Nav */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-        <p className="text-sage/40 mb-2 px-2 text-[9px] font-medium tracking-widest uppercase">Navigation</p>
-        {NAV_ITEMS.map((item) =>
-          item.live ? (
+          return enabled ? (
             <NavLink
               key={item.to}
-              to={item.to}
-              end={item.to === '/app'}
+              to={to}
+              end={item.to === '/app' || item.to === '/app/command-center'}
               className={({ isActive }) =>
-                `group flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-all duration-150 ${
+                `group flex w-full items-center justify-center gap-3 rounded-lg border px-2 py-2.5 text-left transition-all duration-150 lg:justify-start lg:px-3 ${
                   isActive
-                    ? 'bg-clay/20 text-cream border-clay/30'
-                    : 'text-sage/70 hover:text-cream border-transparent hover:bg-white/[0.04]'
+                    ? 'border-[var(--color-accent)]/30 bg-[var(--color-accent)]/15 text-[var(--color-text-primary)]'
+                    : 'border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]'
                 } `
               }
             >
               {({ isActive }) => (
                 <>
                   <span
-                    className={`h-4 w-4 flex-shrink-0 transition-colors ${isActive ? 'text-clay' : 'text-sage/50 group-hover:text-sage'}`}
+                    className={`h-4 w-4 shrink-0 transition-colors ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-secondary)]'}`}
                   >
                     {item.icon}
                   </span>
-                  <span className="flex-1 text-sm font-medium">{item.label}</span>
+                  <span className="hidden flex-1 text-sm font-medium lg:block">{item.label}</span>
                   <span
-                    className={`rounded px-1.5 py-0.5 text-[9px] font-medium tracking-wide ${isActive ? 'bg-clay/30 text-clay' : 'text-sage/40 bg-white/[0.04]'}`}
+                    className={`hidden rounded px-1.5 py-0.5 text-[9px] font-medium tracking-wide lg:inline ${isActive ? 'bg-[var(--color-accent)]/25 text-[var(--color-accent)]' : 'bg-[var(--color-surface)] text-[var(--color-text-tertiary)]'}`}
                   >
-                    {item.phase}
+                    {itemTag(item)}
                   </span>
                 </>
               )}
@@ -73,35 +146,37 @@ export default function Sidebar() {
           ) : (
             <div
               key={item.to}
-              className="flex cursor-default items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 opacity-40"
-              title="Coming in a future phase"
+              className="flex cursor-default items-center justify-center gap-3 rounded-lg border border-transparent px-2 py-2.5 opacity-40 lg:justify-start lg:px-3"
+              title={disabledTitle}
             >
-              <span className="text-sage/40 h-4 w-4 flex-shrink-0">{item.icon}</span>
-              <span className="text-sage/60 flex-1 text-sm font-medium">{item.label}</span>
-              <span className="text-sage/30 rounded bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-medium tracking-wide">
-                {item.phase}
+              <span className="h-4 w-4 shrink-0 text-[var(--color-text-tertiary)]">{item.icon}</span>
+              <span className="hidden flex-1 text-sm font-medium text-[var(--color-text-secondary)] lg:block">
+                {item.label}
+              </span>
+              <span className="hidden rounded bg-[var(--color-surface)] px-1.5 py-0.5 text-[9px] font-medium tracking-wide text-[var(--color-text-tertiary)] lg:inline">
+                {itemTag(item)}
               </span>
             </div>
-          ),
-        )}
+          );
+        })}
       </nav>
 
       {/* Footer — user + logout */}
-      <div className="border-t border-white/[0.06] px-4 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="bg-clay/20 border-clay/20 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border">
-            <span className="font-heading text-clay text-xs font-semibold">
+      <div className="border-t border-[var(--color-border)] px-2 py-4 lg:px-4">
+        <div className="flex flex-col items-center gap-2 lg:flex-row lg:gap-2.5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/15">
+            <span className="font-heading text-xs font-semibold text-[var(--color-accent)]">
               {user?.name?.charAt(0)?.toUpperCase() ?? 'U'}
             </span>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-cream/80 truncate text-xs">{user?.name ?? '—'}</p>
-            <p className="text-sage/50 truncate text-[10px]">{user?.email ?? ''}</p>
+          <div className="hidden min-w-0 flex-1 lg:block">
+            <p className="truncate text-xs text-[var(--color-text-primary)]">{user?.name ?? '—'}</p>
+            <p className="truncate text-[10px] text-[var(--color-text-tertiary)]">{user?.email ?? ''}</p>
           </div>
           <button
             onClick={handleLogout}
             title="Sign out"
-            className="text-sage/40 hover:text-clay focus-visible:ring-clay rounded transition-colors focus-visible:ring-1 focus-visible:outline-none"
+            className="rounded text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-accent)] focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none"
           >
             <LogoutIcon />
           </button>

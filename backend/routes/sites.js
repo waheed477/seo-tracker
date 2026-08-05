@@ -11,6 +11,8 @@ const { createNotification } = require('../lib/notify');
 
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/i;
 
+const FREE_TIER_SITE_LIMIT = 1;
+
 function normalizeDomain(raw) {
   return String(raw)
     .replace(/^https?:\/\//, '')
@@ -114,10 +116,27 @@ router.post('/', async (req, res) => {
     const workspace = await requireMembership(workspaceId, req.user.id, res);
     if (!workspace) return;
 
+    // ── Duplicate check first — 409 before any tier logic ────────────────
+    // Must run before the free-tier check so a duplicate add always gets 409
+    // regardless of plan (otherwise a free plan with 1 site returns 403 on
+    // what is actually a duplicate-domain error).
     const existing = await Site.findOne({ workspaceId, domain: normalized });
     if (existing) {
       return res.status(409).json({ success: false, error: 'This domain is already in the workspace' });
     }
+
+    // ── Free tier limit enforcement ──────────────────────────────────────
+    if (workspace.plan === 'free') {
+      const currentSiteCount = await Site.countDocuments({ workspaceId });
+      if (currentSiteCount >= FREE_TIER_SITE_LIMIT) {
+        return res.status(403).json({
+          success: false,
+          error: 'FREE_TIER_LIMIT_REACHED',
+          data: { limit: FREE_TIER_SITE_LIMIT, current: currentSiteCount },
+        });
+      }
+    }
+
     const site = await Site.create({ workspaceId, domain: normalized });
     res.status(201).json({ success: true, data: site });
   } catch (err) {
@@ -225,7 +244,10 @@ router.post('/:id/keywords', async (req, res) => {
 
     res.json({ success: true, data: saved });
   } catch (err) {
-    console.error('[Sites] keyword research error:', err.message);
+    console.error('[Sites] keyword research error:', err.stack || err);
+    if (err.response) {
+      console.error('[Sites] keyword research axios response:', err.response.status, err.response.data);
+    }
     res.status(500).json({ success: false, error: err.message ?? 'Failed to run keyword research' });
   }
 });
@@ -307,7 +329,7 @@ router.post('/:id/content-review', async (req, res) => {
 
     res.json({ success: true, data: results });
   } catch (err) {
-    console.error('[Sites] content review error:', err.message);
+    console.error('[Sites] content review error:', err);
     res.status(500).json({ success: false, error: err.message ?? 'Failed to run content review' });
   }
 });

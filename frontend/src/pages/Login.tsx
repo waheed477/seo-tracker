@@ -4,8 +4,9 @@ import { authApi } from '../api/api';
 import { useAuthStore } from '../store/authStore';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import Logo from '../components/Logo';
 import Footer from '../components/Footer';
+import Logo from '../components/Logo';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -26,23 +27,29 @@ export default function Login() {
       setError(result.error);
       return;
     }
-    setAuth(result.data.token, result.data.user);
+    // Store both user AND the access token so all in-session API calls
+    // immediately use the Authorization header (bypasses any Vite proxy
+    // cookie-forwarding quirks in local dev).
+    setAuth(result.data.user, result.data.token);
     navigate('/app');
   }
 
   return (
-    <div className="bg-navy flex min-h-screen flex-col">
+    <div className="bg-[var(--color-bg)] flex min-h-screen flex-col relative">
       {/* Subtle background texture */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(139,94,60,0.08)_0%,transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(var(--color-accent-rgb),0.08)_0%,transparent_60%)]" />
+      <div className="absolute right-4 top-4 z-10">
+        <ThemeToggle />
+      </div>
 
       <div className="flex flex-1 items-center justify-center p-4">
         <div className="fade-in relative w-full max-w-sm">
           {/* Logo */}
-          <Logo variant="full" theme="dark" className="mb-8" />
+          <Logo variant="full" className="mb-8" />
 
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-7">
-            <h1 className="font-heading text-cream mb-1 text-xl font-semibold">Welcome back</h1>
-            <p className="text-sage/60 mb-6 text-sm">Sign in to your workspace</p>
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-7">
+            <h1 className="font-heading text-[var(--color-text-primary)] mb-1 text-xl font-semibold">Welcome back</h1>
+            <p className="text-[var(--color-text-secondary)] mb-6 text-sm">Sign in to your workspace</p>
 
             {error && (
               <div className="mb-4 rounded-lg border border-red-500/30 bg-red-900/30 px-3.5 py-2.5 text-sm text-red-300">
@@ -75,10 +82,16 @@ export default function Login() {
             </form>
           </div>
 
-          <p className="text-sage/50 mt-5 text-center text-sm">
+          <p className="text-[var(--color-text-secondary)] mt-5 text-center text-sm">
             No account?{' '}
-            <Link to="/register" className="text-clay hover:text-clay/80 transition-colors">
+            <Link to="/register" className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-colors">
               Create one
+            </Link>
+          </p>
+          <p className="text-[var(--color-text-secondary)] mt-2 text-center text-sm">
+            Forgot your password?{' '}
+            <Link to="/forgot-password" className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-colors">
+              Reset it here
             </Link>
           </p>
         </div>

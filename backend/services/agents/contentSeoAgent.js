@@ -94,10 +94,15 @@ Return ONLY a valid JSON object with: overallAssessment, suggestions (array of {
   }
 
   let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error(`Groq returned invalid JSON: ${raw.slice(0, 200)}`);
+  if (typeof raw === 'object') {
+    parsed = raw;
+  } else {
+    try {
+      parsed = JSON.parse(raw);
+    } catch (parseErr) {
+      const snippet = typeof raw === 'string' ? raw.slice(0, 200) : JSON.stringify(raw).slice(0, 200);
+      throw new Error(`Groq returned invalid JSON: ${snippet}`);
+    }
   }
 
   // Validate and normalise

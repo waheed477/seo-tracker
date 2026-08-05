@@ -16,12 +16,14 @@ export default function Button({
   ...rest
 }: Props) {
   const base =
-    'inline-flex items-center justify-center font-heading font-medium rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay focus-visible:ring-offset-2 focus-visible:ring-offset-navy disabled:opacity-50 disabled:cursor-not-allowed';
+    'inline-flex items-center justify-center font-heading font-medium rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variants = {
-    primary: 'bg-clay text-cream hover:bg-clay/90 active:scale-[0.98]',
-    ghost: 'bg-white/[0.05] text-cream border border-white/10 hover:bg-white/[0.08] active:scale-[0.98]',
-    danger: 'bg-red-700/80 text-cream hover:bg-red-700 active:scale-[0.98]',
+    primary:
+      'bg-[var(--color-accent)] text-[var(--color-accent-text)] hover:bg-[var(--color-accent-hover)] active:scale-[0.98]',
+    ghost:
+      'bg-[var(--color-surface)] text-[var(--color-text-primary)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] active:scale-[0.98]',
+    danger: 'bg-red-700/80 text-white hover:bg-red-700 active:scale-[0.98]',
   };
 
   const sizes = {

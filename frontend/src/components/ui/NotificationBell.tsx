@@ -33,8 +33,7 @@ function timeAgo(dateStr: string): string {
 
 export default function NotificationBell() {
   const navigate = useNavigate();
-  const { token } = useAuthStore();
-  const addToast = useToastStore((s) => s.addToast);
+    const addToast = useToastStore((s) => s.addToast);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
@@ -47,11 +46,11 @@ export default function NotificationBell() {
 
   // Fetch notifications periodically
   useEffect(() => {
-    if (!token || !currentWorkspaceId) return;
+    if (!currentWorkspaceId) return;
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 15000);
     return () => clearInterval(interval);
-  }, [token, currentWorkspaceId]);
+  }, [currentWorkspaceId]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -65,9 +64,9 @@ export default function NotificationBell() {
   }, []);
 
   async function fetchNotifications() {
-    if (!token || !currentWorkspaceId) return;
+    if (!currentWorkspaceId) return;
     setLoading(true);
-    const res = await notificationApi.list(currentWorkspaceId, token);
+    const res = await notificationApi.list(currentWorkspaceId);
     setLoading(false);
     if (res.success) {
       setNotifications(res.data);
@@ -75,14 +74,14 @@ export default function NotificationBell() {
   }
 
   async function handleMarkRead(n: Notification) {
-    if (!token || n.read) return;
-    await notificationApi.markRead(n._id, token);
+    if (n.read) return;
+    await notificationApi.markRead(n._id);
     setNotifications((prev) => prev.map((x) => (x._id === n._id ? { ...x, read: true } : x)));
   }
 
   async function handleMarkAllRead() {
-    if (!token || !currentWorkspaceId) return;
-    const res = await notificationApi.markAllRead(currentWorkspaceId, token);
+    if (!currentWorkspaceId) return;
+    const res = await notificationApi.markAllRead(currentWorkspaceId);
     if (res.success) {
       setNotifications((prev) => prev.map((x) => ({ ...x, read: true })));
       addToast('success', 'All notifications marked as read');
@@ -111,7 +110,7 @@ export default function NotificationBell() {
       {/* Bell button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="text-sage/60 hover:text-cream relative flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-white/[0.06]"
+        className="relative flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
         title="Notifications"
       >
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4">
@@ -119,7 +118,7 @@ export default function NotificationBell() {
           <path d="M7 13h2" />
         </svg>
         {unreadCount > 0 && (
-          <span className="bg-clay text-cream absolute -top-1 -right-1 flex h-4 w-4 animate-pulse items-center justify-center rounded-full text-[10px] font-bold">
+          <span className="absolute -top-1 -right-1 flex h-4 w-4 animate-pulse items-center justify-center rounded-full bg-[var(--color-accent)] text-[10px] font-bold text-[var(--color-accent-text)]">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -127,12 +126,12 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {open && (
-        <div className="bg-navy/95 absolute top-10 right-0 z-50 w-80 overflow-hidden rounded-xl border border-white/[0.08] shadow-xl backdrop-blur-md">
+        <div className="absolute top-10 right-0 z-50 w-80 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
-            <p className="font-heading text-cream text-sm font-semibold">Notifications</p>
+          <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
+            <p className="font-heading text-sm font-semibold text-[var(--color-text-primary)]">Notifications</p>
             {unreadCount > 0 && (
-              <button onClick={handleMarkAllRead} className="text-clay/70 hover:text-clay text-xs transition-colors">
+              <button onClick={handleMarkAllRead} className="text-xs text-[var(--color-accent)] transition-colors hover:text-[var(--color-accent-hover)]">
                 Mark all read
               </button>
             )}
@@ -142,8 +141,8 @@ export default function NotificationBell() {
           <div className="max-h-64 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-sage/50 text-sm">No notifications yet</p>
-                <p className="text-sage/30 mt-1 text-xs">
+                <p className="text-sm text-[var(--color-text-tertiary)]">No notifications yet</p>
+                <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">
                   You'll be notified when audits, analyses, or plans complete.
                 </p>
               </div>
@@ -152,15 +151,15 @@ export default function NotificationBell() {
                 <button
                   key={n._id}
                   onClick={() => handleClick(n)}
-                  className={`w-full border-b border-white/[0.04] px-4 py-3 text-left transition-colors hover:bg-white/[0.04] ${n.read ? 'opacity-50' : ''}`}
+                  className={`w-full border-b border-[var(--color-border)] px-4 py-3 text-left transition-colors hover:bg-[var(--color-surface-hover)] ${n.read ? 'opacity-50' : ''}`}
                 >
                   <div className="flex items-start gap-2.5">
                     <span className="mt-0.5 flex-shrink-0 text-sm">{TYPE_ICONS[n.type] || '📌'}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-cream/80 text-sm leading-snug">{n.message}</p>
-                      <p className="text-sage/40 mt-1 text-[10px]">{timeAgo(n.createdAt)}</p>
+                      <p className="text-[var(--color-text-secondary)] text-sm leading-snug">{n.message}</p>
+                      <p className="mt-1 text-[10px] text-[var(--color-text-tertiary)]">{timeAgo(n.createdAt)}</p>
                     </div>
-                    {!n.read && <span className="bg-clay mt-1.5 h-2 w-2 flex-shrink-0 rounded-full" />}
+                    {!n.read && <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-[var(--color-accent)]" />}
                   </div>
                 </button>
               ))

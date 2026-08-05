@@ -13,24 +13,25 @@ export default function SecurityPage() {
         we don&apos;t have. This page describes our actual practices — not aspirational ones.
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">Authentication</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">Authentication</h2>
       <ul className="list-inside list-disc space-y-2">
         <li>
           <strong>Passwords are hashed with bcrypt (12 rounds)</strong> — we never store passwords in plain text. Even
           if the database were compromised, passwords would not be readable.
         </li>
         <li>
-          <strong>JWT-based authentication</strong> — we use stateless JSON Web Tokens for session management. Tokens
-          are stored in browser memory (Zustand store), not in cookies or local storage, which means they expire when
-          the browser tab is closed.
+          <strong>JWT-based authentication</strong> — we use stateless JSON Web Tokens for session management. The
+          short-lived access token (15 minutes) is delivered in an <code>httpOnly</code> cookie, so JavaScript running
+          in the page cannot read it.
         </li>
         <li>
-          <strong>No persistent auth cookies</strong> — our JWT is in-memory only. Users must re-login on page refresh.
-          This is a deliberate trade-off: it reduces the risk of token theft via XSS.
+          <strong>Rotating refresh tokens</strong> — a longer-lived (30 day) refresh token, also in an{' '}
+          <code>httpOnly</code> cookie, keeps you signed in across page refreshes and browser restarts. It is stored
+          only as a bcrypt hash in our database, is rotated on every use, and is revoked server-side when you sign out.
         </li>
       </ul>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">Encryption at rest</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">Encryption at rest</h2>
       <ul className="list-inside list-disc space-y-2">
         <li>
           <strong>GSC refresh tokens are encrypted with AES-256-CBC</strong> — when you connect Google Search Console,
@@ -43,7 +44,7 @@ export default function SecurityPage() {
         </li>
       </ul>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">Crawler security and ethics</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">Crawler security and ethics</h2>
       <ul className="list-inside list-disc space-y-2">
         <li>
           <strong>No Puppeteer or headless browser</strong> — our crawler uses axios + cheerio only. It fetches HTML and
@@ -59,7 +60,7 @@ export default function SecurityPage() {
         </li>
         <li>
           <strong>Transparent User-Agent</strong> — our crawler identifies itself as{' '}
-          <code className="text-cream/80 rounded bg-white/[0.06] px-1.5 py-0.5 text-xs">
+          <code className="text-[var(--color-text-tertiary)] rounded bg-[var(--color-surface)] px-1.5 py-0.5 text-xs">
             SEO-OS-Audit/1.0 (Technical SEO auditing tool)
           </code>
           .
@@ -70,7 +71,7 @@ export default function SecurityPage() {
         </li>
       </ul>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">Environment secrets</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">Environment secrets</h2>
       <ul className="list-inside list-disc space-y-2">
         <li>
           <strong>Secrets never reach the client</strong> — JWT_SECRET, GROQ_API_KEY, SITE_ENCRYPTION_KEY, and Google
@@ -79,14 +80,14 @@ export default function SecurityPage() {
         </li>
         <li>
           <strong>CORS is explicit</strong> — we do not use wildcard{' '}
-          <code className="text-cream/80 rounded bg-white/[0.06] px-1.5 py-0.5 text-xs">
+          <code className="text-[var(--color-text-tertiary)] rounded bg-[var(--color-surface)] px-1.5 py-0.5 text-xs">
             Access-Control-Allow-Origin: *
           </code>
           . Only the FRONTEND_URL you configure is allowed as an origin.
         </li>
       </ul>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">Infrastructure</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">Infrastructure</h2>
       <ul className="list-inside list-disc space-y-2">
         <li>
           <strong>Single-process architecture</strong> — no Redis, no message queues, no external job runners. This
@@ -103,7 +104,7 @@ export default function SecurityPage() {
         </li>
       </ul>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">What we don&apos;t claim</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">What we don't claim</h2>
       <p>
         We want to be transparent about what we <em>don&apos;t</em> have:
       </p>
@@ -127,16 +128,16 @@ export default function SecurityPage() {
       <p className="mt-3">
         If any of these are requirements for your organisation, we recommend evaluating whether this platform meets your
         compliance needs. We&apos;re happy to discuss specific security questions at{' '}
-        <a href="mailto:support@seo-os.com" className="text-clay hover:text-clay/80 underline underline-offset-2">
+        <a href="mailto:support@seo-os.com" className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2">
           support@seo-os.com
         </a>
         .
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">Reporting security issues</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">Reporting security issues</h2>
       <p>
         If you discover a security vulnerability, please report it responsibly to{' '}
-        <a href="mailto:support@seo-os.com" className="text-clay hover:text-clay/80 underline underline-offset-2">
+        <a href="mailto:support@seo-os.com" className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2">
           support@seo-os.com
         </a>
         . We ask that you give us reasonable time to respond before public disclosure.

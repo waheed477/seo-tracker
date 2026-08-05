@@ -13,7 +13,7 @@ export default function TermsOfService() {
         don&apos;t use the platform. We wrote these in plain language because we respect your time.
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">1. Acceptable use</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">1. Acceptable use</h2>
       <p>SEO OS is a tool for analysing and improving the SEO of websites. You may use it to:</p>
       <ul className="list-inside list-disc space-y-2">
         <li>Audit websites you own or have explicit permission to analyse</li>
@@ -37,21 +37,21 @@ export default function TermsOfService() {
         <li>Resell access to the platform without written permission</li>
       </ul>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">2. Account responsibilities</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">2. Account responsibilities</h2>
       <ul className="list-inside list-disc space-y-2">
         <li>You are responsible for maintaining the confidentiality of your login credentials.</li>
         <li>You must provide accurate registration information.</li>
         <li>You are responsible for all activity that occurs under your account.</li>
         <li>
           If you suspect unauthorised access, contact us immediately at{' '}
-          <a href="mailto:support@seo-os.com" className="text-clay hover:text-clay/80 underline underline-offset-2">
+          <a href="mailto:support@seo-os.com" className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2">
             support@seo-os.com
           </a>
           .
         </li>
       </ul>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">3. AI-generated content disclaimer</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">3. AI-generated content disclaimer</h2>
       <p>SEO OS uses AI (via the Groq API) to generate insights, suggestions, and analysis. This includes:</p>
       <ul className="list-inside list-disc space-y-2">
         <li>
@@ -77,31 +77,31 @@ export default function TermsOfService() {
         recommendations as one input among many in your SEO strategy.
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">4. Crawler behaviour</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">4. Crawler behaviour</h2>
       <p>
         Our technical audit crawler respects <strong>robots.txt</strong> and uses a <strong>400 ms polite delay</strong>{' '}
         between requests. We identify ourselves with a transparent User-Agent header:{' '}
-        <code className="text-cream/80 rounded bg-white/[0.06] px-1.5 py-0.5 text-xs">
+        <code className="text-[var(--color-text-tertiary)] rounded bg-[var(--color-surface)] px-1.5 py-0.5 text-xs">
           SEO-OS-Audit/1.0 (Technical SEO auditing tool)
         </code>
         . We limit crawls to 20 pages per audit run and cap at 5 gap analyses per site per 24 hours. We use axios +
         cheerio — no headless browser, no JavaScript execution on crawled pages.
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">5. Your data</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">5. Your data</h2>
       <p>
         You retain ownership of all data you provide to the platform (site URLs, content, keywords). We store it solely
         to provide the service. We do not claim any intellectual property rights over your data.
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">6. Service availability</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">6. Service availability</h2>
       <p>
         We strive to keep the platform available but do not guarantee uptime. The service is provided &quot;as is&quot;
         without warranties of any kind, express or implied. We may modify, suspend, or discontinue features with
         reasonable notice.
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">7. Limitation of liability</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">7. Limitation of liability</h2>
       <p>
         To the maximum extent permitted by law, SEO OS shall not be liable for any indirect, incidental, special,
         consequential, or punitive damages arising from your use of the platform. This includes, but is not limited to,
@@ -109,27 +109,27 @@ export default function TermsOfService() {
         you paid for the service in the 12 months preceding the claim.
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">8. Termination</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">8. Termination</h2>
       <p>
         You may delete your account at any time by contacting{' '}
-        <a href="mailto:support@seo-os.com" className="text-clay hover:text-clay/80 underline underline-offset-2">
+        <a href="mailto:support@seo-os.com" className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2">
           support@seo-os.com
         </a>
         . We reserve the right to suspend or terminate accounts that violate these terms, with notice where practicable.
         Upon termination, your data will be deleted within 30 days.
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">9. Changes to these terms</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">9. Changes to these terms</h2>
       <p>
         We may update these terms as the product evolves. We&apos;ll note the &quot;Last updated&quot; date at the top.
         Material changes will be communicated via email or in-app notification. Continued use after changes constitutes
         acceptance.
       </p>
 
-      <h2 className="font-heading text-cream mt-8 mb-3 text-lg font-semibold">10. Contact</h2>
+      <h2 className="font-heading text-[var(--color-text-primary)] mt-8 mb-3 text-lg font-semibold">10. Contact</h2>
       <p>
         Questions about these terms? Reach us at{' '}
-        <a href="mailto:support@seo-os.com" className="text-clay hover:text-clay/80 underline underline-offset-2">
+        <a href="mailto:support@seo-os.com" className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] underline underline-offset-2">
           support@seo-os.com
         </a>
         .

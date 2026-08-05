@@ -23,7 +23,7 @@ const siteSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-siteSchema.pre('save', function () {
+siteSchema.pre('save', async function () {
   this.domain = normalizeDomain(this.domain);
 });
 

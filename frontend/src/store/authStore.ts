@@ -7,23 +7,21 @@ export interface AuthUser {
 }
 
 interface AuthState {
-  token: string | null;
   user: AuthUser | null;
+  /** In-memory access token — kept alongside the httpOnly cookie so that
+   * the Authorization header can be set on every request. This survives
+   * in-tab navigation but is cleared on page refresh; the httpOnly cookie
+   * re-hydrates it via AuthHydrator. */
+  token: string | null;
   isAuthenticated: boolean;
-  setAuth: (token: string, user: AuthUser) => void;
+  setAuth: (user: AuthUser, token?: string | null) => void;
   clearAuth: () => void;
 }
 
-/**
- * JWT is stored in-memory (Zustand) — never in localStorage or a cookie.
- * This eliminates XSS token-theft risk. Trade-off: the user is logged out
- * on page refresh and must re-authenticate. For a future "remember me"
- * feature, the recommended upgrade is httpOnly cookies managed server-side.
- */
 export const useAuthStore = create<AuthState>((set) => ({
-  token: null,
   user: null,
+  token: null,
   isAuthenticated: false,
-  setAuth: (token, user) => set({ token, user, isAuthenticated: true }),
-  clearAuth: () => set({ token: null, user: null, isAuthenticated: false }),
+  setAuth: (user, token = null) => set({ user, token, isAuthenticated: true }),
+  clearAuth: () => set({ user: null, token: null, isAuthenticated: false }),
 }));

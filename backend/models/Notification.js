@@ -1,6 +1,14 @@
 const mongoose = require('mongoose');
 
-const NOTIFICATION_TYPES = ['audit_complete', 'action_plan_ready', 'gsc_sync_error', 'competitor_analysis_complete'];
+const NOTIFICATION_TYPES = [
+  'audit_complete',
+  'action_plan_ready',
+  'gsc_sync_error',
+  'competitor_analysis_complete',
+  'plan_upgraded',
+  'plan_downgraded',
+  'payment_failed',
+];
 
 const notificationSchema = new mongoose.Schema({
   workspaceId: {

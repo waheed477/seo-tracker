@@ -17,10 +17,19 @@ const GSC_API_BASE = 'https://www.googleapis.com/webmasters/v3';
 // ── OAuth helpers ─────────────────────────────────────────────────────────────
 
 /**
- * Build the Google OAuth consent URL for a site.
+ * Build the Google OAuth consent URL.
  * Requests readonly scope for Search Console.
+ *
+ * The redirect URI is a SINGLE fixed route (GET /api/gsc/callback) — Google
+ * OAuth requires one exact, pre-registered redirect URI and does not allow a
+ * dynamic path segment (like a site id). The site is instead carried through
+ * the OAuth `state` parameter, which the caller signs so the callback can
+ * recover the site id without trusting the URL.
+ *
+ * @param {string} state - Opaque, signed state string (e.g. a short-lived JWT
+ *   containing the siteId). Passed back verbatim by Google to the callback.
  */
-function getAuthUrl(siteId) {
+function getAuthUrl(state) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI;
 
@@ -35,7 +44,7 @@ function getAuthUrl(siteId) {
     scope: 'https://www.googleapis.com/auth/webmasters.readonly',
     access_type: 'offline', // to get a refresh token
     prompt: 'consent', // force consent to always get a new refresh token
-    state: siteId, // pass siteId through so callback knows which site
+    state, // signed state carrying the siteId — verified in the callback
   });
 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;

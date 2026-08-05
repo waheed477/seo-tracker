@@ -93,14 +93,19 @@ Return ONLY a valid JSON array. Each element must have: keyword, cluster, intent
   }
 
   let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error(`Groq returned invalid JSON: ${raw.slice(0, 200)}`);
+  if (typeof raw === 'object') {
+    parsed = raw;
+  } else {
+    try {
+      parsed = JSON.parse(raw);
+    } catch (parseErr) {
+      const snippet = typeof raw === 'string' ? raw.slice(0, 200) : JSON.stringify(raw).slice(0, 200);
+      throw new Error(`Groq returned invalid JSON: ${snippet}`);
+    }
   }
 
   // Groq may return { keywords: [...] } or just the array
-  const keywords = Array.isArray(parsed) ? parsed : (parsed.keywords ?? parsed.results ?? []);
+  const keywords = Array.isArray(parsed) ? parsed : parsed.keywords ?? parsed.results ?? [];
 
   if (!Array.isArray(keywords) || keywords.length === 0) {
     throw new Error('No keywords returned from Groq');

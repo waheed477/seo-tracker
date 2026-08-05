@@ -59,13 +59,13 @@ function IssueSection({ title, count, severity, children, empty }: SectionProps)
   }[severity];
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02]">
+    <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-5 py-4 transition-colors hover:bg-white/[0.02]"
+        className="flex w-full items-center justify-between px-5 py-4 transition-colors hover:bg-[var(--color-surface-hover)]"
       >
         <div className="flex items-center gap-3">
-          <span className="font-heading text-cream text-sm font-semibold">{title}</span>
+          <span className="font-heading text-[var(--color-text-primary)] text-sm font-semibold">{title}</span>
           <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${badge}`}>
             {count} {count === 1 ? 'issue' : 'issues'}
           </span>
@@ -75,15 +75,15 @@ function IssueSection({ title, count, severity, children, empty }: SectionProps)
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          className={`text-sage/40 h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`text-[var(--color-text-tertiary)] h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
         >
           <path d="M4 6l4 4 4-4" />
         </svg>
       </button>
 
       {open && (
-        <div className="border-t border-white/[0.06] px-5 py-4">
-          {count === 0 ? <p className="text-sage/50 text-sm italic">{empty ?? 'No issues found.'}</p> : children}
+        <div className="border-t border-[var(--color-border)] px-5 py-4">
+          {count === 0 ? <p className="text-[var(--color-text-tertiary)] text-sm italic">{empty ?? 'No issues found.'}</p> : children}
         </div>
       )}
     </div>
@@ -96,13 +96,13 @@ function UrlList({ urls, max = 10 }: { urls: string[]; max?: number }) {
   return (
     <div className="space-y-1">
       {visible.map((u) => (
-        <div key={u} className="flex items-center gap-2 border-b border-white/[0.04] py-1 last:border-0">
-          <span className="bg-sage/30 h-1.5 w-1.5 flex-shrink-0 rounded-full" />
+        <div key={u} className="flex items-center gap-2 border-b border-[var(--color-border)] py-1 last:border-0">
+          <span className="bg-[var(--color-border)] h-1.5 w-1.5 flex-shrink-0 rounded-full" />
           <a
             href={u}
             target="_blank"
             rel="noreferrer"
-            className="text-sage/70 hover:text-clay truncate font-mono text-xs transition-colors"
+            className="text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] truncate font-mono text-xs transition-colors"
           >
             {u}
           </a>
@@ -111,7 +111,7 @@ function UrlList({ urls, max = 10 }: { urls: string[]; max?: number }) {
       {urls.length > max && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          className="text-clay/70 hover:text-clay mt-1 text-xs transition-colors"
+          className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] mt-1 text-xs transition-colors"
         >
           + {urls.length - max} more
         </button>
@@ -171,8 +171,7 @@ function StatusBanner({ audit }: { audit: Audit }) {
 export default function AuditPage() {
   const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
-  const { token } = useAuthStore();
-  const addToast = useToastStore((s) => s.addToast);
+    const addToast = useToastStore((s) => s.addToast);
 
   const [site, setSite] = useState<Site | null>(null);
   const [audit, setAudit] = useState<Audit | null>(null);
@@ -189,22 +188,22 @@ export default function AuditPage() {
   }, []);
 
   const fetchLatest = useCallback(async () => {
-    if (!token || !siteId) return;
-    const res = await auditApi.latest(siteId, token);
+    if (!siteId) return;
+    const res = await auditApi.latest(siteId);
     if (res.success) {
       setAudit(res.data);
       if (res.data.status === 'done' || res.data.status === 'failed') stopPolling();
     }
-  }, [token, siteId, stopPolling]);
+  }, [siteId, stopPolling]);
 
   // Load site + latest audit on mount
   useEffect(() => {
-    if (!token || !siteId) return;
-    siteApi.get(siteId, token).then((r) => {
+    if (!siteId) return;
+    siteApi.get(siteId).then((r) => {
       if (r.success) setSite(r.data);
     });
     fetchLatest();
-  }, [token, siteId, fetchLatest]);
+  }, [siteId, fetchLatest]);
 
   // Start polling when audit is queued or running
   useEffect(() => {
@@ -219,10 +218,10 @@ export default function AuditPage() {
   }, [audit?.status, fetchLatest, stopPolling]);
 
   async function handleRunAudit() {
-    if (!token || !siteId) return;
+    if (!siteId) return;
     setLaunchError('');
     setLaunching(true);
-    const res = await auditApi.run(siteId, token);
+    const res = await auditApi.run(siteId);
     setLaunching(false);
     if (!res.success) {
       setLaunchError(res.error);
@@ -249,7 +248,7 @@ export default function AuditPage() {
       {/* Back */}
       <button
         onClick={() => navigate(-1)}
-        className="text-sage/50 hover:text-sage/80 mb-5 flex items-center gap-1.5 text-xs transition-colors"
+        className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] mb-5 flex items-center gap-1.5 text-xs transition-colors"
       >
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
           <path d="M10 4L6 8l4 4" />
@@ -261,11 +260,11 @@ export default function AuditPage() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <div className="mb-1 flex items-center gap-2">
-            <span className="text-sage/40 text-[10px] tracking-wider uppercase">Technical Audit</span>
+            <span className="text-[var(--color-text-tertiary)] text-[10px] tracking-wider uppercase">Technical Audit</span>
           </div>
-          <h1 className="font-heading text-cream text-xl font-semibold">{site?.domain ?? 'Loading…'}</h1>
+          <h1 className="font-heading text-[var(--color-text-primary)] text-xl font-semibold">{site?.domain ?? 'Loading…'}</h1>
           {audit?.completedAt && audit.status === 'done' && (
-            <p className="text-sage/50 mt-0.5 text-xs">Last run {new Date(audit.completedAt).toLocaleString()}</p>
+            <p className="text-[var(--color-text-tertiary)] mt-0.5 text-xs">Last run {new Date(audit.completedAt).toLocaleString()}</p>
           )}
         </div>
 
@@ -294,7 +293,7 @@ export default function AuditPage() {
       {!audit && !isActive && (
         <EmptyState
           icon={
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-clay h-7 w-7">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--color-accent)] h-7 w-7">
               <path d="M3 12l2.5-5 2.5 3 2.5-7L13 12" />
             </svg>
           }
@@ -314,9 +313,9 @@ export default function AuditPage() {
               { label: 'Broken links', value: tech.brokenInternalLinks.length },
               { label: 'Score', value: `${auditScore}/100` },
             ].map((s) => (
-              <div key={s.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-                <p className="text-sage/40 text-[10px] tracking-wider uppercase">{s.label}</p>
-                <p className="font-heading text-cream mt-0.5 text-lg font-semibold">{s.value}</p>
+              <div key={s.label} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+                <p className="text-[var(--color-text-tertiary)] text-[10px] tracking-wider uppercase">{s.label}</p>
+                <p className="font-heading text-[var(--color-text-primary)] mt-0.5 text-lg font-semibold">{s.value}</p>
               </div>
             ))}
           </div>
@@ -356,7 +355,7 @@ export default function AuditPage() {
             <div className="space-y-4">
               {tech.missingTitleTags.length > 0 && (
                 <div>
-                  <p className="text-cream mb-2 text-xs font-semibold">
+                  <p className="text-[var(--color-text-primary)] mb-2 text-xs font-semibold">
                     Missing title tags ({tech.missingTitleTags.length})
                   </p>
                   <UrlList urls={tech.missingTitleTags} />
@@ -364,7 +363,7 @@ export default function AuditPage() {
               )}
               {tech.missingMetaDescriptions.length > 0 && (
                 <div>
-                  <p className="text-cream mb-2 text-xs font-semibold">
+                  <p className="text-[var(--color-text-primary)] mb-2 text-xs font-semibold">
                     Missing meta descriptions ({tech.missingMetaDescriptions.length})
                   </p>
                   <UrlList urls={tech.missingMetaDescriptions} />
@@ -372,12 +371,12 @@ export default function AuditPage() {
               )}
               {tech.duplicateTitles.length > 0 && (
                 <div>
-                  <p className="text-cream mb-2 text-xs font-semibold">
+                  <p className="text-[var(--color-text-primary)] mb-2 text-xs font-semibold">
                     Duplicate titles ({tech.duplicateTitles.length} groups)
                   </p>
                   {tech.duplicateTitles.map((dt) => (
                     <div key={dt.title} className="mb-3">
-                      <p className="text-sage/60 mb-1 text-xs italic">"{dt.title}"</p>
+                      <p className="text-[var(--color-text-secondary)] mb-1 text-xs italic">"{dt.title}"</p>
                       <UrlList urls={dt.urls} />
                     </div>
                   ))}
@@ -390,7 +389,7 @@ export default function AuditPage() {
           <IssueSection title="Heading Structure" count={tech.headingIssues.length} severity="warning">
             <div className="space-y-1">
               {tech.headingIssues.map((h, i) => (
-                <div key={i} className="flex items-start gap-3 border-b border-white/[0.04] py-1.5 last:border-0">
+                <div key={i} className="flex items-start gap-3 border-b border-[var(--color-border)] py-1.5 last:border-0">
                   <span className="mt-0.5 flex-shrink-0 rounded border border-amber-800/40 bg-amber-900/30 px-1.5 py-0.5 text-[10px] text-amber-400">
                     {h.issue}
                   </span>
@@ -398,7 +397,7 @@ export default function AuditPage() {
                     href={h.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sage/70 hover:text-clay truncate font-mono text-xs transition-colors"
+                    className="text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] truncate font-mono text-xs transition-colors"
                   >
                     {h.url}
                   </a>
@@ -413,17 +412,17 @@ export default function AuditPage() {
               {tech.missingAltText.map((img, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between border-b border-white/[0.04] py-1.5 last:border-0"
+                  className="flex items-center justify-between border-b border-[var(--color-border)] py-1.5 last:border-0"
                 >
                   <a
                     href={img.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sage/70 hover:text-clay flex-1 truncate font-mono text-xs transition-colors"
+                    className="text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] flex-1 truncate font-mono text-xs transition-colors"
                   >
                     {img.url}
                   </a>
-                  <span className="text-sage/40 ml-3 flex-shrink-0 text-[10px]">
+                  <span className="text-[var(--color-text-tertiary)] ml-3 flex-shrink-0 text-[10px]">
                     {img.imageCount} image{img.imageCount !== 1 ? 's' : ''} missing alt
                   </span>
                 </div>
@@ -435,7 +434,7 @@ export default function AuditPage() {
           <IssueSection title="Broken Internal Links" count={tech.brokenInternalLinks.length} severity="error">
             <div className="space-y-1">
               {tech.brokenInternalLinks.map((bl, i) => (
-                <div key={i} className="border-b border-white/[0.04] py-2 last:border-0">
+                <div key={i} className="border-b border-[var(--color-border)] py-2 last:border-0">
                   <div className="mb-1 flex items-center gap-2">
                     <span className="flex-shrink-0 rounded border border-red-800/40 bg-red-900/30 px-1.5 py-0.5 text-[10px] text-red-400">
                       {bl.status ?? 'ERR'}
@@ -449,13 +448,13 @@ export default function AuditPage() {
                       {bl.brokenUrl}
                     </a>
                   </div>
-                  <p className="text-sage/40 ml-1 text-[10px]">
+                  <p className="text-[var(--color-text-tertiary)] ml-1 text-[10px]">
                     Found on:{' '}
                     <a
                       href={bl.fromUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="hover:text-sage/70 font-mono transition-colors"
+                      className="hover:text-[var(--color-text-secondary)] font-mono transition-colors"
                     >
                       {bl.fromUrl}
                     </a>
@@ -466,8 +465,8 @@ export default function AuditPage() {
           </IssueSection>
 
           {/* Pages crawled */}
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-            <p className="font-heading text-cream mb-3 text-sm font-semibold">Pages crawled ({pages.length})</p>
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <p className="font-heading text-[var(--color-text-primary)] mb-3 text-sm font-semibold">Pages crawled ({pages.length})</p>
             <UrlList urls={pages} max={15} />
           </div>
         </div>
@@ -479,7 +478,7 @@ export default function AuditPage() {
 function InfoRow({ label, ok, okText, failText }: { label: string; ok: boolean; okText: string; failText: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sage/60 w-24 text-xs">{label}</span>
+      <span className="text-[var(--color-text-secondary)] w-24 text-xs">{label}</span>
       <span className={`flex items-center gap-1.5 text-xs ${ok ? 'text-emerald-400' : 'text-red-400'}`}>
         <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${ok ? 'bg-emerald-400' : 'bg-red-400'}`} />
         {ok ? okText : failText}

@@ -2,18 +2,23 @@
  * Google Search Console routes
  *
  * GET  /api/sites/:id/gsc/connect   — Redirect to Google OAuth consent screen
- * GET  /api/sites/:id/gsc/callback  — OAuth callback, exchange code, store tokens
  * GET  /api/sites/:id/rankings      — Get aggregated ranking data from GSC
  * POST /api/sites/:id/gsc/sync      — Manually trigger a GSC data sync
+ *
+ * NOTE: the OAuth callback is NOT here — Google requires ONE fixed, pre-registered
+ * redirect URI with no dynamic path segment, so the callback lives at the
+ * site-agnostic route GET /api/gsc/callback (see routes/gscCallback.js). The
+ * connect route below encodes the siteId into a signed `state` param so the
+ * callback can recover it.
  */
 
 const router = require('express').Router();
+const jwt = require('jsonwebtoken');
 const requireAuth = require('../middleware/auth');
 const Site = require('../models/Site');
 const RankSnapshot = require('../models/RankSnapshot');
 const Workspace = require('../models/Workspace');
 const gscService = require('../services/gscService');
-const { encrypt } = require('../lib/encryption');
 
 // ── Shared guards ─────────────────────────────────────────────────────────────
 
@@ -44,25 +49,34 @@ async function requireSiteAccess(siteId, userId, res) {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
-// Apply auth to all routes EXCEPT the callback (Google redirects here without a JWT)
-// The callback uses a state parameter to verify the siteId.
+// The connect route below is a browser redirect (verified via ?token=). All
+// other routes require a JWT header (requireAuth is applied further down).
 
 /**
  * GET /api/sites/:id/gsc/connect
  * Redirects to Google's OAuth consent screen.
  * This is a browser redirect — user must be logged in (we verify via JWT in query param).
+ *
+ * The siteId is encoded into a signed, short-lived `state` token so the fixed
+ * callback route (/api/gsc/callback) can recover it without a path param.
  */
 router.get('/:id/gsc/connect', async (req, res) => {
   try {
     const siteId = req.params.id;
-    // We can't use requireAuth middleware on a redirect, so we verify via query param
-    // The frontend passes ?token=xxx which we validate
-    const token = req.query.token;
+    // We can't use requireAuth middleware on a browser redirect, so we verify via query param or cookie.
+    // Support req.cookies.accessToken as the primary method, with fallbacks.
+    const cookieToken = req.cookies?.accessToken;
+    const queryToken = typeof req.query.token === 'string' ? req.query.token : undefined;
+    const headerToken = req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization.slice(7)
+      : undefined;
+    const token = cookieToken || queryToken || headerToken;
+    console.log('[GSC] connect selected token:', token ? `${token.slice(0, 20)}... (len=${token.length})` : '(none)');
+
     if (!token) {
       return res.status(401).json({ success: false, error: 'Authentication required — pass ?token=' });
     }
 
-    const jwt = require('jsonwebtoken');
     let user;
     try {
       user = jwt.verify(token, process.env.JWT_SECRET);
@@ -73,61 +87,15 @@ router.get('/:id/gsc/connect', async (req, res) => {
     const site = await requireSiteAccess(siteId, user.id, res);
     if (!site) return;
 
-    const authUrl = gscService.getAuthUrl(siteId);
+    // Sign a short-lived state token carrying the siteId. Google returns this
+    // verbatim to the callback, which verifies the signature before trusting it.
+    const state = jwt.sign({ siteId, purpose: 'gsc_oauth' }, process.env.JWT_SECRET, { expiresIn: '10m' });
+
+    const authUrl = gscService.getAuthUrl(state);
     res.redirect(authUrl);
   } catch (err) {
     console.error('[GSC] connect error:', err.message);
     res.status(500).json({ success: false, error: 'Failed to initiate Google OAuth' });
-  }
-});
-
-/**
- * GET /api/sites/:id/gsc/callback
- * Google redirects here after user consents. Exchanges the code for tokens.
- * This endpoint does NOT require a JWT header — Google redirects here without one.
- * Security: the state parameter contains the siteId, and we verify the code
- * was issued by Google for our client.
- */
-router.get('/:id/gsc/callback', async (req, res) => {
-  try {
-    const siteId = req.params.id;
-    const { code, error: oauthError } = req.query;
-
-    if (oauthError) {
-      return res.redirect(`/app/sites/${siteId}/rankings?gsc=error&msg=${encodeURIComponent(oauthError)}`);
-    }
-
-    if (!code) {
-      return res.redirect(`/app/sites/${siteId}/rankings?gsc=error&msg=No+authorization+code+received`);
-    }
-
-    const site = await Site.findById(siteId);
-    if (!site) {
-      return res.redirect(`/app/sites/${siteId}/rankings?gsc=error&msg=Site+not+found`);
-    }
-
-    // Exchange code for tokens
-    const tokens = await gscService.exchangeCode(code);
-
-    // Encrypt and store the refresh token
-    const encryptedRefreshToken = encrypt(tokens.refreshToken);
-
-    // Determine the GSC site URL
-    // The domain property in GSC is usually "https://example.com/" or "sc-domain:example.com"
-    // We'll try to figure it out — default to https://<domain>/
-    const gscSiteUrl = `https://${site.domain}/`;
-
-    await Site.findByIdAndUpdate(siteId, {
-      gscConnected: true,
-      gscRefreshToken: encryptedRefreshToken,
-      gscSiteUrl,
-    });
-
-    // Redirect back to the frontend rankings page with success indicator
-    res.redirect(`/app/sites/${siteId}/rankings?gsc=connected`);
-  } catch (err) {
-    console.error('[GSC] callback error:', err.message);
-    res.redirect(`/app/sites/${req.params.id}/rankings?gsc=error&msg=${encodeURIComponent(err.message)}`);
   }
 });
 

@@ -22,7 +22,7 @@ const AGENT_STYLES: Record<string, { bg: string; text: string; border: string; l
 const PRIORITY_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
   high: { bg: 'bg-red-900/30', text: 'text-red-400', border: 'border-red-800/40', label: 'High' },
   medium: { bg: 'bg-amber-900/30', text: 'text-amber-400', border: 'border-amber-800/40', label: 'Medium' },
-  low: { bg: 'bg-sage-900/30', text: 'text-sage-400', border: 'border-sage-800/40', label: 'Low' },
+  low: { bg: 'bg-[var(--color-surface)]', text: 'text-[var(--color-text-tertiary)]', border: 'border-[var(--color-border)]', label: 'Low' },
 };
 
 // ── Status dropdown ───────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ function ActionItemCard({
 
   return (
     <div
-      className={`rounded-xl border bg-white/[0.02] transition-all ${isDone ? 'border-white/[0.04] opacity-60' : 'border-white/[0.06]'}`}
+      className={`rounded-xl border bg-[var(--color-surface)] transition-all ${isDone ? 'border-[var(--color-border)] opacity-60' : 'border-[var(--color-border)]'}`}
     >
       <div className="px-5 py-4">
         <div className="flex items-start gap-3">
@@ -108,7 +108,7 @@ function ActionItemCard({
                 ? 'border-emerald-500 bg-emerald-500'
                 : item.status === 'in_progress'
                   ? 'border-amber-500 bg-amber-500/20'
-                  : 'hover:border-clay/50 border-white/20'
+                  : 'hover:border-[var(--color-accent)]/50 border-[var(--color-border)]'
             }`}
           >
             {item.status === 'done' && (
@@ -138,18 +138,18 @@ function ActionItemCard({
                     ? 'border-emerald-800/40 bg-emerald-900/30 text-emerald-400'
                     : item.status === 'in_progress'
                       ? 'border-amber-800/40 bg-amber-900/30 text-amber-400'
-                      : 'text-sage/40 border-white/[0.06] bg-white/[0.04]'
+                      : 'text-[var(--color-text-tertiary)] border-[var(--color-border)] bg-[var(--color-surface)]'
                 }`}
               >
                 {STATUS_OPTIONS.find((s) => s.value === item.status)?.label ?? 'To Do'}
               </span>
             </div>
             <p
-              className={`font-heading mb-1 text-sm font-semibold ${isDone ? 'text-sage/50 line-through' : 'text-cream'}`}
+              className={`font-heading mb-1 text-sm font-semibold ${isDone ? 'text-[var(--color-text-tertiary)] line-through' : 'text-[var(--color-text-primary)]'}`}
             >
               {item.title}
             </p>
-            <p className="text-sage/70 text-sm leading-relaxed">{item.description}</p>
+            <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{item.description}</p>
           </div>
         </div>
       </div>
@@ -161,8 +161,7 @@ function ActionItemCard({
 export default function ActionPlanPage() {
   const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
-  const { token } = useAuthStore();
-  const addToast = useToastStore((s) => s.addToast);
+    const addToast = useToastStore((s) => s.addToast);
 
   const [site, setSite] = useState<Site | null>(null);
   const [plan, setPlan] = useState<ActionPlan | null>(null);
@@ -186,16 +185,27 @@ export default function ActionPlanPage() {
 
   // Load site + latest plan
   useEffect(() => {
-    if (!token || !siteId) return;
+    if (!siteId) return;
     (async () => {
-      const siteRes = await siteApi.get(siteId, token);
+      const siteRes = await siteApi.get(siteId);
       if (siteRes.success) setSite(siteRes.data);
+      else {
+        setFetchError(siteRes.error || 'Failed to load site');
+        setFetching(false);
+        return;
+      }
 
-      const planRes = await actionPlanApi.latest(siteId, token);
+      const planRes = await actionPlanApi.latest(siteId);
       setFetching(false);
-      if (planRes.success) setPlan(planRes.data);
+      if (planRes.success) {
+        setPlan(planRes.data);
+      } else if (planRes.error && planRes.error.includes('No action plans found')) {
+        setPlan(null);
+      } else {
+        setFetchError(planRes.error || 'Failed to load action plan');
+      }
     })();
-  }, [token, siteId]);
+  }, [siteId]);
 
   // Poll when plan is queued/running
   useEffect(() => {
@@ -203,8 +213,8 @@ export default function ActionPlanPage() {
     if (plan.status === 'queued' || plan.status === 'running') {
       stopPolling();
       pollRef.current = setInterval(async () => {
-        if (!token || !siteId) return;
-        const res = await actionPlanApi.latest(siteId, token);
+        if (!siteId) return;
+        const res = await actionPlanApi.latest(siteId);
         if (res.success) {
           setPlan(res.data);
           if (res.data.status === 'done' || res.data.status === 'failed') stopPolling();
@@ -214,13 +224,13 @@ export default function ActionPlanPage() {
       stopPolling();
     }
     return stopPolling;
-  }, [plan?.status, token, siteId, stopPolling]);
+  }, [plan?.status, siteId, stopPolling]);
 
   async function handleGenerate() {
-    if (!token || !siteId) return;
+    if (!siteId) return;
     setGenError('');
     setGenerating(true);
-    const res = await actionPlanApi.generate(siteId, token);
+    const res = await actionPlanApi.generate(siteId);
     setGenerating(false);
     if (!res.success) {
       setGenError(res.success === false ? res.error : 'Failed');
@@ -240,8 +250,8 @@ export default function ActionPlanPage() {
     // Start polling
     stopPolling();
     pollRef.current = setInterval(async () => {
-      if (!token || !siteId) return;
-      const rRes = await actionPlanApi.latest(siteId, token);
+      if (!siteId) return;
+      const rRes = await actionPlanApi.latest(siteId);
       if (rRes.success) {
         setPlan(rRes.data);
         if (rRes.data.status === 'done' || rRes.data.status === 'failed') stopPolling();
@@ -250,8 +260,8 @@ export default function ActionPlanPage() {
   }
 
   async function handleStatusChange(itemId: string, status: string) {
-    if (!token || !siteId) return;
-    const res = await actionPlanApi.updateItem(siteId, itemId, status, token);
+    if (!siteId) return;
+    const res = await actionPlanApi.updateItem(siteId, itemId, status);
     if (res.success) setPlan(res.data);
   }
 
@@ -269,7 +279,7 @@ export default function ActionPlanPage() {
       {/* Back */}
       <button
         onClick={() => navigate(-1)}
-        className="text-sage/50 hover:text-sage/80 mb-5 flex items-center gap-1.5 text-xs transition-colors"
+        className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] mb-5 flex items-center gap-1.5 text-xs transition-colors"
       >
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
           <path d="M10 4L6 8l4 4" />
@@ -280,9 +290,9 @@ export default function ActionPlanPage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <span className="text-sage/40 text-[10px] tracking-wider uppercase">Action Plan</span>
-          <h1 className="font-heading text-cream mt-0.5 text-xl font-semibold">{site?.domain ?? 'Loading…'}</h1>
-          <p className="text-sage/60 mt-0.5 text-sm">AI-synthesized priorities from all your SEO data</p>
+          <span className="text-[var(--color-text-tertiary)] text-[10px] tracking-wider uppercase">Action Plan</span>
+          <h1 className="font-heading text-[var(--color-text-primary)] mt-0.5 text-xl font-semibold">{site?.domain ?? 'Loading…'}</h1>
+          <p className="text-[var(--color-text-secondary)] mt-0.5 text-sm">AI-synthesized priorities from all your SEO data</p>
         </div>
         <Button size="sm" onClick={handleGenerate} loading={generating} disabled={isActive}>
           {isActive ? 'Generating…' : plan ? 'Regenerate Plan' : 'Generate Action Plan'}
@@ -301,7 +311,7 @@ export default function ActionPlanPage() {
       ) : !plan || (plan.status === 'done' && items.length === 0) ? (
         <EmptyState
           icon={
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-clay h-7 w-7">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--color-accent)] h-7 w-7">
               <path d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2M9 5a2 2 0 012-2h2M7 11l2 2 4-4" />
             </svg>
           }
@@ -315,35 +325,35 @@ export default function ActionPlanPage() {
 
           {/* Summary card */}
           {plan.status === 'done' && plan.summary && (
-            <div className="border-clay/20 bg-clay/5 rounded-xl border p-5">
+            <div className="border-[var(--color-accent)]/20 bg-[var(--color-accent)]/5 rounded-xl border p-5">
               <div className="mb-2 flex items-center gap-2">
-                <div className="bg-clay/20 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg">
+                <div className="bg-[var(--color-accent)]/20 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg">
                   <svg
                     viewBox="0 0 16 16"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.5"
-                    className="text-clay h-3.5 w-3.5"
+                    className="text-[var(--color-accent)] h-3.5 w-3.5"
                   >
                     <path d="M8 1v14M1 8h14" />
                   </svg>
                 </div>
-                <p className="font-heading text-cream text-sm font-semibold">AI Summary</p>
+                <p className="font-heading text-[var(--color-text-primary)] text-sm font-semibold">AI Summary</p>
               </div>
-              <p className="text-sage/70 text-sm leading-relaxed">{plan.summary}</p>
+              <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{plan.summary}</p>
             </div>
           )}
 
           {/* Progress bar */}
           {plan.status === 'done' && items.length > 0 && (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-sage/50 text-xs font-medium">Progress</p>
-                <p className="text-sage/50 text-xs">
+                <p className="text-[var(--color-text-tertiary)] text-xs font-medium">Progress</p>
+                <p className="text-[var(--color-text-tertiary)] text-xs">
                   {doneCount}/{items.length} completed
                 </p>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.06]">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-border)]">
                 <div
                   className="h-full rounded-full bg-emerald-500 transition-all duration-500"
                   style={{ width: `${items.length > 0 ? (doneCount / items.length) * 100 : 0}%` }}
@@ -358,11 +368,11 @@ export default function ActionPlanPage() {
               {[
                 { label: 'High Priority', value: highCount, color: 'text-red-400' },
                 { label: 'Medium Priority', value: medCount, color: 'text-amber-400' },
-                { label: 'Low Priority', value: lowCount, color: 'text-sage/60' },
+                { label: 'Low Priority', value: lowCount, color: 'text-[var(--color-text-secondary)]' },
                 { label: 'Completed', value: doneCount, color: 'text-emerald-400' },
               ].map((s) => (
-                <div key={s.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-                  <p className="text-sage/40 text-[10px] tracking-wider uppercase">{s.label}</p>
+                <div key={s.label} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+                  <p className="text-[var(--color-text-tertiary)] text-[10px] tracking-wider uppercase">{s.label}</p>
                   <p className={`font-heading mt-0.5 text-lg font-semibold ${s.color}`}>{s.value}</p>
                 </div>
               ))}
@@ -378,8 +388,8 @@ export default function ActionPlanPage() {
                   onClick={() => setFilter(f)}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                     filter === f
-                      ? 'bg-clay/20 text-cream border-clay/30'
-                      : 'text-sage/60 border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06]'
+                      ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border-[var(--color-accent)]/30'
+                      : 'text-[var(--color-text-secondary)] border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)]'
                   }`}
                 >
                   {f === 'all'
@@ -407,11 +417,11 @@ export default function ActionPlanPage() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.5"
-                className="text-clay/50 h-3.5 w-3.5 flex-shrink-0"
+                className="text-[var(--color-accent)]/50 h-3.5 w-3.5 flex-shrink-0"
               >
                 <path d="M8 1v14M1 8h14" />
               </svg>
-              <p className="text-sage/40 text-[10px] italic">
+              <p className="text-[var(--color-text-tertiary)] text-[10px] italic">
                 This plan synthesizes data from your Technical Audit, Keyword Research, Competitor Analysis, and Google
                 Search Console rankings. Each item is tagged with its source area.
               </p>

@@ -27,6 +27,7 @@
   --color-accent: #8b5e3c;
   --color-accent-hover: #7a5235;
   --color-accent-text: #ffffff;
+  --color-accent-rgb: 139,94,60;
 
   /* ── Typography ───────────────────────────────────────────────────────── */
   --font-heading: 'Space Grotesk', ui-sans-serif, system-ui;
@@ -51,10 +52,44 @@
   --color-accent: #a8794f;
   --color-accent-hover: #966b42;
   --color-accent-text: #ffffff;
+  --color-accent-rgb: 168,121,79;
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.15);
   --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.25), 0 8px 32px rgba(0, 0, 0, 0.2);
   --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.3), 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Semi-transparent section backgrounds (landing page) ──────────────────── */
+/* Lowered from 0.88 → 0.80/0.82 so the mesh + node network stays clearly visible
+   THROUGH every section (not just the transparent hero). Card surfaces stay
+   fully opaque, so body text always sits on solid ground. */
+:root {
+  --color-bg-semi: rgba(253, 251, 246, 0.80);
+  --color-bg-alt-semi: rgba(243, 228, 201, 0.82);
+}
+.dark {
+  --color-bg-semi: rgba(10, 41, 71, 0.80);
+  --color-bg-alt-semi: rgba(7, 29, 51, 0.82);
+}
+
+/* ── Landing "SEO signal" mesh-gradient stops (light mode) ─────────────────── */
+/* Multi-stop glow blended from the brand palette. Moderate — not barely-there —
+   alpha so the atmosphere reads the moment the page loads. */
+:root {
+  --mesh-1: rgba(139, 94, 60, 0.20);   /* clay  — top-left */
+  --mesh-2: rgba(211, 212, 192, 0.28); /* sage  — top-right */
+  --mesh-3: rgba(10, 41, 71, 0.10);    /* navy  — bottom-left */
+  --mesh-4: rgba(243, 228, 201, 0.42); /* cream — bottom-right */
+  --net-node: rgba(139, 94, 60, 0.42);
+  --net-edge: rgba(139, 94, 60, 0.20);
+}
+.dark {
+  --mesh-1: rgba(168, 121, 79, 0.26);  /* clay-light — top-left */
+  --mesh-2: rgba(211, 212, 192, 0.10); /* sage       — top-right */
+  --mesh-3: rgba(18, 58, 94, 0.55);    /* navy-light — bottom-left */
+  --mesh-4: rgba(168, 121, 79, 0.16);  /* clay-light — bottom-right */
+  --net-node: rgba(211, 212, 192, 0.40);
+  --net-edge: rgba(168, 121, 79, 0.28);
 }
 
 /* ── Base layer ───────────────────────────────────────────────────────────── */
@@ -159,4 +194,196 @@
 
 .animate-slide-in {
   animation: slideIn 0.3s ease forwards;
+}
+
+/* ── Landing background animations ─────────────────────────────────────────── */
+@keyframes signal-drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(12px, -8px); }
+  50% { transform: translate(-8px, 12px); }
+  75% { transform: translate(8px, 6px); }
+}
+
+/* Mesh gradient slowly breathes + drifts so the colour field reads as a
+   living atmosphere rather than a static wash. Scale keeps the glow edges
+   off-screen while it moves. */
+@keyframes mesh-drift {
+  0%, 100% { transform: translate(0, 0) scale(1.1); }
+  33% { transform: translate(-3%, 2%) scale(1.16); }
+  66% { transform: translate(2%, -2%) scale(1.12); }
+}
+
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes float-icon {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(3deg); }
+  50% { transform: translateY(-14px) rotate(0deg); }
+  75% { transform: translateY(-6px) rotate(-3deg); }
+}
+
+@keyframes float-chip {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.signal-network {
+  animation: signal-drift 45s ease-in-out infinite;
+}
+
+/* Mesh gradient field — full-bleed, sits behind the node network */
+.landing-mesh {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(38% 42% at 18% 22%, var(--mesh-1) 0%, transparent 62%),
+    radial-gradient(34% 40% at 82% 16%, var(--mesh-2) 0%, transparent 60%),
+    radial-gradient(46% 50% at 25% 88%, var(--mesh-3) 0%, transparent 65%),
+    radial-gradient(48% 52% at 88% 82%, var(--mesh-4) 0%, transparent 68%);
+  animation: mesh-drift 30s ease-in-out infinite;
+  will-change: transform;
+}
+
+.signal-node {
+  opacity: 0.7;
+  animation: node-pulse 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal-network,
+  .landing-mesh,
+  .signal-node,
+  .floating-icon,
+  .floating-chip {
+    animation: none !important;
+  }
+}
+
+/* ── Scroll entrance animations (per-element motion signatures) ────────────── */
+/* Each element type has ONE consistent signature: headlines/text slide UP,
+   feature-card pairs alternate LEFT/RIGHT, stat/trust/step items cascade UP
+   with a staggered animation-delay. Keyframe-based (not transition-based) so
+   they never conflict with the hover transitions on the same elements. */
+.anim {
+  opacity: 0;
+}
+.anim-in.anim-up {
+  animation: enter-up 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.anim-in.anim-left {
+  animation: enter-left 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.anim-in.anim-right {
+  animation: enter-right 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes enter-left {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes enter-right {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Reduced motion: opacity fade only — no slide/transform, no stagger travel. */
+@media (prefers-reduced-motion: reduce) {
+  .anim-in.anim-up,
+  .anim-in.anim-left,
+  .anim-in.anim-right {
+    animation: enter-fade 0.4s ease both;
+    animation-delay: 0s !important;
+  }
+  @keyframes enter-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* Consistent card hover lift — shared by feature / step / trust cards.
+   Uses box-shadow + border-color (transitioned), never transform, so it can't
+   fight the keyframe entrance animation. */
+.card-lift {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card-lift:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+/* ── Welcome Tour animations ───────────────────────────────────────────────── */
+@keyframes tour-overlay-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes tour-content-enter {
+  from { opacity: 0; transform: scale(0.95) translateY(16px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes mascot-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes mascot-wave-arm {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(-20deg); }
+  30% { transform: rotate(10deg); }
+  45% { transform: rotate(-15deg); }
+  60% { transform: rotate(5deg); }
+  75% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes card-stack-in {
+  from { opacity: 0; transform: translateX(60px) scale(0.92); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.tour-overlay {
+  animation: tour-overlay-enter 0.3s ease forwards;
+}
+
+.tour-enter {
+  animation: tour-content-enter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.tour-mascot {
+  animation: mascot-bob 3s ease-in-out infinite;
+}
+
+.tour-mascot-wave {
+  animation: mascot-bob 3s ease-in-out infinite, mascot-wave-arm 1.2s ease-out forwards;
+}
+
+.tour-mascot-wave .mascot-arm-wave {
+  animation: mascot-wave-arm 1.2s ease-out forwards;
+  transform-origin: 78px 82px;
+}
+
+.tour-card-enter {
+  animation: card-stack-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-overlay,
+  .tour-enter,
+  .tour-mascot,
+  .tour-mascot-wave,
+  .tour-mascot-wave .mascot-arm-wave,
+  .tour-card-enter {
+    animation: none !important;
+  }
+  .tour-card-enter {
+    opacity: 1 !important;
+  }
 }

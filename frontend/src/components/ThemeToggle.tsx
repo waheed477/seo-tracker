@@ -1,33 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useThemeStore } from '../store/themeStore';
 
 /**
  * ThemeToggle — sun/moon icon toggle for light/dark mode.
  *
- * - Reads initial preference from localStorage, falls back to prefers-color-scheme.
- * - Toggles 'dark' class on <html> element.
- * - Persists choice in localStorage (key: 'seo-os-theme').
- * - Smooth transition on toggle.
+ * Purely a view over the shared themeStore — it holds NO local theme state, so
+ * every instance (landing navbar, authenticated navbar, …) always renders the
+ * same value and toggling any one of them updates all of them.
+ *
+ * Persistence, the `dark` class on <html>, and the localStorage key
+ * ('seo-os-theme') are all owned by the store. See store/themeStore.ts.
  */
 export default function ThemeToggle() {
-  const [dark, setDark] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return document.documentElement.classList.contains('dark');
-  });
-
-  useEffect(() => {
-    const cl = document.documentElement.classList;
-    if (dark) {
-      cl.add('dark');
-      localStorage.setItem('seo-os-theme', 'dark');
-    } else {
-      cl.remove('dark');
-      localStorage.setItem('seo-os-theme', 'light');
-    }
-  }, [dark]);
+  const dark = useThemeStore((s) => s.isDark);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   return (
     <button
-      onClick={() => setDark((d) => !d)}
+      onClick={toggleTheme}
       className="relative flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--color-surface)]"
       aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={dark ? 'Switch to light mode' : 'Switch to dark mode'}

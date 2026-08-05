@@ -67,14 +67,14 @@ function GapRow({
   return (
     <div className="px-5 py-4">
       <div className="mb-2 flex items-center gap-2">
-        <p className="font-heading text-cream text-sm font-semibold">{gap.topic}</p>
+        <p className="font-heading text-[var(--color-text-primary)] text-sm font-semibold">{gap.topic}</p>
         <div className="ml-auto flex items-center gap-1.5">
           {gap.competitorHasIt ? (
             <span className="rounded border border-emerald-800/40 bg-emerald-900/30 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
               Competitor ✓
             </span>
           ) : (
-            <span className="text-sage/40 rounded border border-white/[0.06] bg-white/[0.04] px-1.5 py-0.5 text-[10px] font-medium">
+            <span className="text-[var(--color-text-tertiary)] rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px] font-medium">
               Competitor ✗
             </span>
           )}
@@ -89,7 +89,7 @@ function GapRow({
           )}
         </div>
       </div>
-      <p className="text-sage/70 text-sm leading-relaxed">{gap.opportunity}</p>
+      <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{gap.opportunity}</p>
     </div>
   );
 }
@@ -98,8 +98,7 @@ function GapRow({
 export default function CompetitorPage() {
   const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
-  const { token } = useAuthStore();
-  const addToast = useToastStore((s) => s.addToast);
+    const addToast = useToastStore((s) => s.addToast);
 
   const [site, setSite] = useState<Site | null>(null);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
@@ -133,12 +132,12 @@ export default function CompetitorPage() {
 
   // Load site + competitors + latest reports on mount
   useEffect(() => {
-    if (!token || !siteId) return;
+    if (!siteId) return;
     (async () => {
-      const siteRes = await siteApi.get(siteId, token);
+      const siteRes = await siteApi.get(siteId);
       if (siteRes.success) setSite(siteRes.data);
 
-      const compRes = await competitorApi.list(siteId, token);
+      const compRes = await competitorApi.list(siteId);
       setFetching(false);
       if (compRes.success) {
         setCompetitors(compRes.data);
@@ -147,7 +146,7 @@ export default function CompetitorPage() {
         // Fetch latest reports for each competitor
         const reportMap: Record<string, ContentGapReport | null> = {};
         for (const c of compRes.data) {
-          const rRes = await competitorApi.latestReport(c._id, token);
+          const rRes = await competitorApi.latestReport(c._id);
           reportMap[c._id] = rRes.success ? rRes.data : null;
         }
         setReports(reportMap);
@@ -155,7 +154,7 @@ export default function CompetitorPage() {
         setFetchError(compRes.success === false ? compRes.error : 'Failed to load competitors');
       }
     })();
-  }, [token, siteId]);
+  }, [siteId]);
 
   // Poll any report that's queued/running
   useEffect(() => {
@@ -166,8 +165,8 @@ export default function CompetitorPage() {
     if (activeReport.status === 'queued' || activeReport.status === 'running') {
       stopPolling();
       pollRef.current = setInterval(async () => {
-        if (!token || !activeCompetitorId) return;
-        const rRes = await competitorApi.latestReport(activeCompetitorId, token);
+        if (!activeCompetitorId) return;
+        const rRes = await competitorApi.latestReport(activeCompetitorId);
         if (rRes.success) {
           setReports((prev) => ({ ...prev, [activeCompetitorId]: rRes.data }));
           if (rRes.data.status === 'done' || rRes.data.status === 'failed') stopPolling();
@@ -177,13 +176,13 @@ export default function CompetitorPage() {
       stopPolling();
     }
     return stopPolling;
-  }, [activeCompetitorId, activeCompetitorId ? reports[activeCompetitorId]?.status : undefined, token, stopPolling]);
+  }, [activeCompetitorId, activeCompetitorId ? reports[activeCompetitorId]?.status : undefined, stopPolling]);
 
   async function handleAddCompetitor() {
-    if (!token || !siteId || !compDomain.trim()) return;
+    if (!siteId || !compDomain.trim()) return;
     setAddError('');
     setAdding(true);
-    const res = await competitorApi.add(siteId, compDomain.trim(), token);
+    const res = await competitorApi.add(siteId, compDomain.trim());
     setAdding(false);
     if (!res.success) {
       setAddError(res.success === false ? res.error : 'Failed');
@@ -199,11 +198,10 @@ export default function CompetitorPage() {
   }
 
   async function handleAnalyze(competitorId: string) {
-    if (!token) return;
-    setAnalyzeError('');
+        setAnalyzeError('');
     setAnalyzing(competitorId);
 
-    const res = await competitorApi.analyze(competitorId, token);
+    const res = await competitorApi.analyze(competitorId);
     setAnalyzing(null);
 
     if (!res.success) {
@@ -228,8 +226,8 @@ export default function CompetitorPage() {
     // Start polling
     stopPolling();
     pollRef.current = setInterval(async () => {
-      if (!token || !competitorId) return;
-      const rRes = await competitorApi.latestReport(competitorId, token);
+      if (!competitorId) return;
+      const rRes = await competitorApi.latestReport(competitorId);
       if (rRes.success) {
         setReports((prev) => ({ ...prev, [competitorId]: rRes.data }));
         if (rRes.data.status === 'done' || rRes.data.status === 'failed') stopPolling();
@@ -247,7 +245,7 @@ export default function CompetitorPage() {
       {/* Back */}
       <button
         onClick={() => navigate(-1)}
-        className="text-sage/50 hover:text-sage/80 mb-5 flex items-center gap-1.5 text-xs transition-colors"
+        className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] mb-5 flex items-center gap-1.5 text-xs transition-colors"
       >
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
           <path d="M10 4L6 8l4 4" />
@@ -258,9 +256,9 @@ export default function CompetitorPage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <span className="text-sage/40 text-[10px] tracking-wider uppercase">Competitor Analysis</span>
-          <h1 className="font-heading text-cream mt-0.5 text-xl font-semibold">{site?.domain ?? 'Loading…'}</h1>
-          <p className="text-sage/60 mt-0.5 text-sm">Add competitors and identify content gaps</p>
+          <span className="text-[var(--color-text-tertiary)] text-[10px] tracking-wider uppercase">Competitor Analysis</span>
+          <h1 className="font-heading text-[var(--color-text-primary)] mt-0.5 text-xl font-semibold">{site?.domain ?? 'Loading…'}</h1>
+          <p className="text-[var(--color-text-secondary)] mt-0.5 text-sm">Add competitors and identify content gaps</p>
         </div>
         <Button
           size="sm"
@@ -275,9 +273,9 @@ export default function CompetitorPage() {
 
       {/* Add competitor form */}
       {showForm && (
-        <div className="border-clay/20 bg-clay/5 mb-6 rounded-xl border p-5">
-          <h2 className="font-heading text-cream mb-1 text-sm font-semibold">Add a competitor</h2>
-          <p className="text-sage/50 mb-4 text-xs">
+        <div className="border-[var(--color-accent)]/20 bg-[var(--color-accent)]/5 mb-6 rounded-xl border p-5">
+          <h2 className="font-heading text-[var(--color-text-primary)] mb-1 text-sm font-semibold">Add a competitor</h2>
+          <p className="text-[var(--color-text-tertiary)] mb-4 text-xs">
             Enter the competitor's bare domain. Their publicly-accessible pages will be crawled for gap analysis.
           </p>
           <div className="flex gap-3">
@@ -285,7 +283,7 @@ export default function CompetitorPage() {
               placeholder="competitor.com"
               value={compDomain}
               onChange={(e) => setCompDomain(e.target.value)}
-              className="text-cream placeholder:text-sage/40 focus:border-clay/60 focus:ring-clay/20 flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm transition-colors hover:border-white/20 focus:ring-1 focus:outline-none"
+              className="text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-[var(--color-accent)]/60 focus:ring-[var(--color-accent)]/20 flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2.5 text-sm transition-colors hover:border-[var(--color-border)] focus:ring-1 focus:outline-none"
               autoFocus
             />
             <Button size="sm" onClick={handleAddCompetitor} loading={adding}>
@@ -312,7 +310,7 @@ export default function CompetitorPage() {
       ) : competitors.length === 0 ? (
         <EmptyState
           icon={
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-clay h-7 w-7">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--color-accent)] h-7 w-7">
               <circle cx="4" cy="8" r="3" />
               <circle cx="12" cy="8" r="3" />
               <line x1="7" y1="8" x2="9" y2="8" />
@@ -338,8 +336,8 @@ export default function CompetitorPage() {
                 onClick={() => setActiveCompetitorId(c._id)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${
                   activeCompetitorId === c._id
-                    ? 'bg-clay/20 text-cream border-clay/30'
-                    : 'text-sage/60 hover:text-sage/80 border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06]'
+                    ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border-[var(--color-accent)]/30'
+                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-secondary)] border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)]'
                 }`}
               >
                 {c.domain}
@@ -348,11 +346,11 @@ export default function CompetitorPage() {
           </div>
 
           {/* Competitor details + analyze button */}
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <p className="font-heading text-cream text-sm font-semibold">{activeCompetitor?.domain}</p>
-                <p className="text-sage/40 mt-0.5 text-xs">
+                <p className="font-heading text-[var(--color-text-primary)] text-sm font-semibold">{activeCompetitor?.domain}</p>
+                <p className="text-[var(--color-text-tertiary)] mt-0.5 text-xs">
                   Added {new Date(activeCompetitor?.createdAt ?? '').toLocaleDateString()}
                   {activeCompetitor?.lastCrawledAt && (
                     <> · Last crawled {new Date(activeCompetitor.lastCrawledAt).toLocaleDateString()}</>
@@ -370,7 +368,7 @@ export default function CompetitorPage() {
             </div>
 
             {/* Daily cap notice */}
-            <p className="text-sage/30 text-[10px] italic">
+            <p className="text-[var(--color-text-tertiary)] text-[10px] italic">
               Limited to 5 analyses per site per day to prevent excessive crawling.
             </p>
           </div>
@@ -388,14 +386,14 @@ export default function CompetitorPage() {
 
           {/* Report results */}
           {activeReport?.status === 'done' && gaps.length > 0 && (
-            <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.02]">
-              <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
-                <p className="font-heading text-cream text-sm font-semibold">Content Gaps ({gaps.length})</p>
-                <p className="text-sage/40 text-xs">
+            <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">
+                <p className="font-heading text-[var(--color-text-primary)] text-sm font-semibold">Content Gaps ({gaps.length})</p>
+                <p className="text-[var(--color-text-tertiary)] text-xs">
                   {site?.domain} vs {activeCompetitor?.domain}
                 </p>
               </div>
-              <div className="divide-y divide-white/[0.04]">
+              <div className="divide-y divide-[var(--color-border)]">
                 {gaps.map((gap, i) => (
                   <GapRow key={i} gap={gap} />
                 ))}
@@ -404,9 +402,9 @@ export default function CompetitorPage() {
           )}
 
           {activeReport?.status === 'done' && gaps.length === 0 && (
-            <div className="rounded-xl border border-dashed border-white/10 py-12 text-center">
-              <p className="text-sage/50 text-sm">No significant content gaps found</p>
-              <p className="text-sage/30 mt-1 text-xs">Your site appears to cover similar topics as the competitor</p>
+            <div className="rounded-xl border border-dashed border-[var(--color-border)] py-12 text-center">
+              <p className="text-[var(--color-text-tertiary)] text-sm">No significant content gaps found</p>
+              <p className="text-[var(--color-text-tertiary)] mt-1 text-xs">Your site appears to cover similar topics as the competitor</p>
             </div>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { useAuthStore } from '../store/authStore';
 // In production, VITE_API_URL is set to the full backend URL (e.g. https://seo-os.hf.space).
 // In local dev, it's empty so the Vite dev-server proxy handles /api requests.
 // This avoids the "bare /api" mistake that breaks deployed apps.
@@ -7,15 +8,76 @@ type ApiSuccess<T> = { success: true; data: T };
 type ApiError = { success: false; error: string };
 export type ApiResult<T> = ApiSuccess<T> | ApiError;
 
-async function request<T>(path: string, options: RequestInit = {}, token?: string | null): Promise<ApiResult<T>> {
+
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<ApiResult<T>> {
+  // Always include the in-memory token as Authorization header if available.
+  // This works even when the Vite dev proxy doesn't forward httpOnly cookies.
+  const { token } = useAuthStore.getState();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...((options.headers as Record<string, string>) ?? {}),
   };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const doFetch = () => fetch(`${BASE}${path}`, {
+    ...options,
+    headers,
+    credentials: 'include',
+  });
+
   try {
-    const res = await fetch(`${BASE}${path}`, { ...options, headers });
+    let res = await doFetch();
+
+    // On 401, attempt a silent token refresh (but never if this IS the refresh call).
+    if (res.status === 401 && path !== '/auth/refresh') {
+      // Deduplicate concurrent refresh attempts.
+      if (!isRefreshing) {
+        isRefreshing = true;
+        refreshPromise = fetch(`${BASE}/auth/refresh`, { method: 'POST', credentials: 'include' })
+          .then(async (r) => {
+            if (r.status === 200) {
+              const body = await r.json();
+              // Store the new token + user in Zustand so the Authorization header
+              // is correct on the immediately-following retry.
+              if (body?.data?.token && body?.data?.user) {
+                useAuthStore.getState().setAuth(body.data.user, body.data.token);
+              }
+              return true;
+            }
+            return false;
+          })
+          .catch(() => false)
+          .finally(() => {
+            isRefreshing = false;
+            // Reset so the next genuine 401 creates a fresh refresh promise.
+            refreshPromise = null;
+          });
+      }
+
+      const refreshSuccess = await (refreshPromise ?? Promise.resolve(false));
+      if (refreshSuccess) {
+        // Re-read the (possibly updated) token after refresh.
+        const newToken = useAuthStore.getState().token;
+        if (newToken) headers['Authorization'] = `Bearer ${newToken}`;
+        res = await doFetch();
+      } else {
+        // Both access token AND refresh token are invalid → log out.
+        // Clear Zustand state only; let React Router (ProtectedRoute) do the redirect.
+        useAuthStore.getState().clearAuth();
+        return { success: false, error: 'Session expired' };
+      }
+    }
+
     const json = await res.json();
+
+    if (!res.ok) {
+      return { success: false, error: json.error || 'Request failed' };
+    }
     return json as ApiResult<T>;
   } catch {
     return { success: false, error: 'Network error — could not reach the server' };
@@ -39,6 +101,19 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),
+  forgotPassword: (email: string) =>
+    request<{ message: string }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token: string, password: string) =>
+    request<AuthPayload>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    }),
+  me: () => request<AuthPayload>('/auth/me', { method: 'GET' }),
+  logout: () => request<{ message: string }>('/auth/logout', { method: 'POST' }),
+  refresh: () => request<AuthPayload>('/auth/refresh', { method: 'POST' }),
 };
 
 // ── Workspaces ────────────────────────────────────────────────────────────────
@@ -47,22 +122,29 @@ export interface Workspace {
   name: string;
   ownerId: string;
   members: { userId: string; role: 'owner' | 'admin' | 'member' }[];
+  plan: 'free' | 'pro';
+  planStatus: 'active' | 'past_due' | 'canceled';
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
   createdAt: string;
 }
 
 export const workspaceApi = {
-  create: (name: string, token: string) =>
-    request<Workspace>('/workspaces', { method: 'POST', body: JSON.stringify({ name }) }, token),
-  list: (token: string) => request<Workspace[]>('/workspaces', {}, token),
-  addMember: (id: string, email: string, role: string, token: string) =>
+  create: (name: string) =>
+    request<Workspace>('/workspaces', { method: 'POST', body: JSON.stringify({ name }) }),
+  list: () => request<Workspace[]>('/workspaces', {}),
+  addMember: (id: string, email: string, role: string) =>
     request<Workspace>(
       `/workspaces/${id}/members`,
       {
         method: 'POST',
         body: JSON.stringify({ email, role }),
-      },
-      token,
+      }
     ),
+  createCheckout: (id: string) =>
+    request<{ url: string }>(`/workspaces/${id}/create-checkout-session`, { method: 'POST' }),
+  createPortal: (id: string) =>
+    request<{ url: string }>(`/workspaces/${id}/create-portal-session`, { method: 'POST' }),
 };
 
 // ── Sites ─────────────────────────────────────────────────────────────────────
@@ -76,11 +158,11 @@ export interface Site {
 }
 
 export const siteApi = {
-  create: (workspaceId: string, domain: string, token: string) =>
-    request<Site>('/sites', { method: 'POST', body: JSON.stringify({ workspaceId, domain }) }, token),
-  list: (workspaceId: string, token: string) =>
-    request<Site[]>(`/sites?workspaceId=${encodeURIComponent(workspaceId)}`, {}, token),
-  get: (id: string, token: string) => request<Site>(`/sites/${id}`, {}, token),
+  create: (workspaceId: string, domain: string) =>
+    request<Site>('/sites', { method: 'POST', body: JSON.stringify({ workspaceId, domain }) }),
+  list: (workspaceId: string) =>
+    request<Site[]>(`/sites?workspaceId=${encodeURIComponent(workspaceId)}`, {}),
+  get: (id: string) => request<Site>(`/sites/${id}`, {}),
 };
 
 // ── Audits ────────────────────────────────────────────────────────────────────
@@ -110,9 +192,9 @@ export interface Audit {
 }
 
 export const auditApi = {
-  run: (siteId: string, token: string) =>
-    request<{ auditId: string }>(`/sites/${siteId}/audit`, { method: 'POST' }, token),
-  latest: (siteId: string, token: string) => request<Audit>(`/sites/${siteId}/audit/latest`, {}, token),
+  run: (siteId: string) =>
+    request<{ auditId: string }>(`/sites/${siteId}/audit`, { method: 'POST' }),
+  latest: (siteId: string) => request<Audit>(`/sites/${siteId}/audit/latest`, {}),
 };
 
 // ── Keywords ──────────────────────────────────────────────────────────────────
@@ -131,17 +213,16 @@ export interface KeywordClusters {
 }
 
 export const keywordApi = {
-  research: (siteId: string, seedKeywords: string[], token: string) =>
+  research: (siteId: string, seedKeywords: string[]) =>
     request<Keyword[]>(
       `/sites/${siteId}/keywords`,
       {
         method: 'POST',
         body: JSON.stringify({ seedKeywords }),
       },
-      token,
     ),
-  clusters: (siteId: string, token: string) =>
-    request<KeywordClusters>(`/sites/${siteId}/keywords/clusters`, {}, token),
+  clusters: (siteId: string) =>
+    request<KeywordClusters>(`/sites/${siteId}/keywords/clusters`, {}),
 };
 
 // ── Content Review ────────────────────────────────────────────────────────────
@@ -152,7 +233,7 @@ export interface ContentReviewResult {
 }
 
 export const contentApi = {
-  review: (siteId: string, content: string, targetKeywords: string[], token: string, pageUrl?: string) =>
+  review: (siteId: string, content: string, targetKeywords: string[], pageUrl?: string) =>
     request<ContentReviewResult>(
       `/sites/${siteId}/content-review`,
       {
@@ -162,7 +243,6 @@ export const contentApi = {
           targetKeywords,
         }),
       },
-      token,
     ),
 };
 
@@ -197,21 +277,20 @@ export interface ContentGapReport {
 }
 
 export const competitorApi = {
-  add: (siteId: string, domain: string, token: string) =>
+  add: (siteId: string, domain: string) =>
     request<Competitor>(
       '/competitors',
       {
         method: 'POST',
         body: JSON.stringify({ siteId, domain }),
       },
-      token,
     ),
-  list: (siteId: string, token: string) =>
-    request<Competitor[]>(`/competitors?siteId=${encodeURIComponent(siteId)}`, {}, token),
-  analyze: (competitorId: string, token: string) =>
-    request<{ reportId: string }>(`/competitors/${competitorId}/analyze`, { method: 'POST' }, token),
-  latestReport: (competitorId: string, token: string) =>
-    request<ContentGapReport>(`/competitors/${competitorId}/report/latest`, {}, token),
+  list: (siteId: string) =>
+    request<Competitor[]>(`/competitors?siteId=${encodeURIComponent(siteId)}`, {}),
+  analyze: (competitorId: string) =>
+    request<{ reportId: string }>(`/competitors/${competitorId}/analyze`, { method: 'POST' }),
+  latestReport: (competitorId: string) =>
+    request<ContentGapReport>(`/competitors/${competitorId}/report/latest`, {}),
 };
 
 // ── GSC / Rankings ────────────────────────────────────────────────────────────
@@ -239,15 +318,13 @@ export interface RankingsData {
 
 export const gscApi = {
   /** Build the OAuth connect URL (browser redirect, not a fetch) */
-  connectUrl: (siteId: string, token: string) =>
-    `${BASE}/sites/${siteId}/gsc/connect?token=${encodeURIComponent(token)}`,
-  rankings: (siteId: string, days: number, token: string) =>
-    request<RankingsData>(`/sites/${siteId}/rankings?days=${days}`, {}, token),
-  sync: (siteId: string, token: string, days?: number) =>
+  connectUrl: (siteId: string) => `${BASE}/sites/${siteId}/gsc/connect`,
+  rankings: (siteId: string, days: number) =>
+    request<RankingsData>(`/sites/${siteId}/rankings?days=${days}`, {}),
+  sync: (siteId: string, days?: number) =>
     request<{ syncedRows: number }>(
       `/sites/${siteId}/gsc/sync${days ? `?days=${days}` : ''}`,
       { method: 'POST' },
-      token,
     ),
 };
 
@@ -275,17 +352,16 @@ export interface ActionPlan {
 }
 
 export const actionPlanApi = {
-  generate: (siteId: string, token: string) =>
-    request<{ planId: string }>(`/sites/${siteId}/action-plan`, { method: 'POST' }, token),
-  latest: (siteId: string, token: string) => request<ActionPlan>(`/sites/${siteId}/action-plan/latest`, {}, token),
-  updateItem: (siteId: string, itemId: string, status: string, token: string) =>
+  generate: (siteId: string) =>
+    request<{ planId: string }>(`/sites/${siteId}/action-plan`, { method: 'POST' }),
+  latest: (siteId: string) => request<ActionPlan>(`/sites/${siteId}/action-plan/latest`, {}),
+  updateItem: (siteId: string, itemId: string, status: string) =>
     request<ActionPlan>(
       `/sites/${siteId}/action-plan/items/${itemId}`,
       {
         method: 'PATCH',
         body: JSON.stringify({ status }),
       },
-      token,
     ),
 };
 
@@ -293,7 +369,7 @@ export const actionPlanApi = {
 export interface Notification {
   _id: string;
   workspaceId: string;
-  type: 'audit_complete' | 'action_plan_ready' | 'gsc_sync_error' | 'competitor_analysis_complete';
+  type: 'audit_complete' | 'action_plan_ready' | 'gsc_sync_error' | 'competitor_analysis_complete' | 'plan_upgraded' | 'plan_downgraded' | 'payment_failed';
   message: string;
   read: boolean;
   relatedSiteId: string | null;
@@ -301,17 +377,16 @@ export interface Notification {
 }
 
 export const notificationApi = {
-  list: (workspaceId: string, token: string) =>
-    request<Notification[]>(`/notifications?workspaceId=${encodeURIComponent(workspaceId)}`, {}, token),
-  markRead: (id: string, token: string) =>
-    request<Notification>(`/notifications/${id}/read`, { method: 'PATCH' }, token),
-  markAllRead: (workspaceId: string, token: string) =>
+  list: (workspaceId: string) =>
+    request<Notification[]>(`/notifications?workspaceId=${encodeURIComponent(workspaceId)}`, {}),
+  markRead: (id: string) =>
+    request<Notification>(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllRead: (workspaceId: string) =>
     request<{ updated: true }>(
       '/notifications/read-all',
       {
         method: 'PATCH',
         body: JSON.stringify({ workspaceId }),
       },
-      token,
     ),
 };

@@ -4,7 +4,7 @@ const Notification = require('../models/Notification');
  * Create a workspace-scoped notification.
  * All workspace members see it.
  * @param {string} workspaceId
- * @param {string} type — one of: audit_complete, action_plan_ready, gsc_sync_error, competitor_analysis_complete
+ * @param {string} type — one of: audit_complete, action_plan_ready, gsc_sync_error, competitor_analysis_complete, plan_upgraded, plan_downgraded, payment_failed
  * @param {string} message
  * @param {string|null} relatedSiteId
  */

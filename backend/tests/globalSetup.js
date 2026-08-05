@@ -15,7 +15,8 @@ module.exports = async () => {
   process.env.SITE_ENCRYPTION_KEY = 'test-encryption-key-32-chars-min!!';
   process.env.GOOGLE_CLIENT_ID = 'test-client-id';
   process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
-  process.env.GOOGLE_REDIRECT_URI = 'http://localhost:5001/api/sites/SITE_ID/gsc/callback';
+  process.env.GOOGLE_REDIRECT_URI = 'http://localhost:5001/api/gsc/callback';
+  process.env.RESEND_API_KEY = 'test-resend-key';
 
   // Store the mongod instance so teardown can stop it
   global.__MONGOD__ = mongod;

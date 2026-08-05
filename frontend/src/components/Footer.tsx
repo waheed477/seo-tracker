@@ -30,8 +30,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           {/* Column 1 — Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <Logo variant="full" theme="dark" className="dark:block hidden" />
-            <Logo variant="full" theme="light" className="dark:hidden block" />
+            <Logo variant="full" />
             <p className="text-[var(--color-text-secondary)] mt-3 max-w-xs text-sm leading-relaxed">
               AI-powered multi-agent SEO platform. Audit, analyse, and act — all in one place.
             </p>

@@ -12,7 +12,7 @@ const competitorSchema = new mongoose.Schema({
 });
 
 // Normalise domain on save (same as Site model)
-competitorSchema.pre('save', function (next) {
+competitorSchema.pre('save', async function () {
   if (this.isModified('domain')) {
     this.domain = this.domain
       .replace(/^https?:\/\//, '')
@@ -20,7 +20,6 @@ competitorSchema.pre('save', function (next) {
       .toLowerCase()
       .trim();
   }
-  next();
 });
 
 // Prevent same competitor domain added twice for the same site

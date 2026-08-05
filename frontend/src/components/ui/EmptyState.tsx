@@ -7,18 +7,18 @@ interface Props {
 
 export default function EmptyState({ icon, title, description, action }: Props) {
   return (
-    <div className="fade-in rounded-xl border border-dashed border-white/10 py-16 text-center">
+    <div className="fade-in rounded-xl border border-dashed border-[var(--color-border)] py-16 text-center">
       {icon && (
-        <div className="bg-clay/10 border-clay/20 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/10">
           {icon}
         </div>
       )}
-      <h2 className="font-heading text-cream mb-2 text-lg font-semibold">{title}</h2>
-      {description && <p className="text-sage/50 mx-auto max-w-md text-sm">{description}</p>}
+      <h2 className="font-heading mb-2 text-lg font-semibold text-[var(--color-text-primary)]">{title}</h2>
+      {description && <p className="mx-auto max-w-md text-sm text-[var(--color-text-tertiary)]">{description}</p>}
       {action && (
         <button
           onClick={action.onClick}
-          className="bg-clay/20 border-clay/30 text-cream hover:bg-clay/30 mt-4 rounded-lg border px-4 py-2 text-sm font-medium transition-colors"
+          className="mt-4 rounded-lg border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/20 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-accent)]/30"
         >
           {action.label}
         </button>

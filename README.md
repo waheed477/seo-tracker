@@ -208,7 +208,7 @@ cd backend && npm test
 cd frontend && npm test
 ```
 
-### Backend (35 tests)
+### Backend (44 tests)
 
 ```bash
 cd backend && npm test
@@ -220,6 +220,7 @@ cd backend && npm test
 | `tests/unit/validation.test.js` | Unit | Input validation on auth, workspace, and site routes |
 | `tests/integration/auth.test.js` | Integration | Register (success, duplicate, normalisation), login (success, wrong password, case-insensitive) |
 | `tests/integration/sites.test.js` | Integration | Create site, domain normalisation, duplicate rejection, audit latest |
+| `tests/integration/billing.test.js` | Integration | Free tier limit enforcement (1 site max, 2nd returns 403), webhook event handling (checkout, subscription updated/deleted, invoice failed) |
 
 - All external calls mocked (Groq, PageSpeed, GSC) — zero real network requests
 - Uses `mongodb-memory-server` for isolated in-memory MongoDB
@@ -257,6 +258,7 @@ cd frontend && npm test
 7. **No password reset flow** — users must contact an admin or re-register.
 8. **Keyword difficulty is AI-estimated** — not real SERP data. The UI labels this honestly.
 9. **Backlink Agent is not included** — no free reliable data source exists. The architecture supports plugging one in.
+10. **Payments are integrated via Stripe in TEST MODE** — this demonstrates a complete subscription billing flow (Checkout, webhooks, plan lifecycle) without processing real payments, since this is a portfolio project.
 
 ---
 
@@ -274,10 +276,11 @@ seo-operator/
 │   │   ├── competitors.js            # Competitor CRUD + gap analysis
 │   │   ├── gsc.js                    # Google Search Console OAuth + rankings
 │   │   ├── actionPlans.js            # Action plan generation + item tracking
-│   │   └── notifications.js          # Workspace notifications
+│   │   ├── notifications.js          # Workspace notifications
+│   │   └── webhooks.js               # Stripe webhook handler (raw body)
 │   ├── models/
 │   │   ├── User.js                   # email, passwordHash, name
-│   │   ├── Workspace.js              # name, ownerId, members[]
+│   │   ├── Workspace.js              # name, ownerId, members[], plan, planStatus, stripeCustomer
 │   │   ├── Site.js                   # domain, gscConnected, encrypted refresh token
 │   │   ├── Audit.js                  # status, results{technical}
 │   │   ├── Keyword.js                # keyword, cluster, intent, difficulty
@@ -293,7 +296,8 @@ seo-operator/
 │   │   │   ├── contentSeoAgent.js    # AI content review + readability
 │   │   │   ├── competitorAgent.js    # Crawl competitor + AI gap analysis
 │   │   │   └── actionPlanAgent.js    # Synthesize all data into plan
-│   │   └── gscService.js             # Google OAuth2 + Search Analytics API
+│   │   ├── gscService.js             # Google OAuth2 + Search Analytics API
+│   │   └── stripeService.js          # Stripe Checkout + Portal session creation
 │   ├── jobs/
 │   │   ├── auditTimeout.js           # Cron watchdog (1 min)
 │   │   ├── gscDailySync.js           # Daily GSC data sync (6 AM UTC)
@@ -323,6 +327,7 @@ seo-operator/
 │   │   │   ├── CompetitorPage.tsx    # Competitor gap analysis
 │   │   │   ├── RankingsPage.tsx      # GSC rank tracking + charts
 │   │   │   ├── ActionPlanPage.tsx    # Action plan items + status tracking
+│   │   │   ├── BillingPage.tsx       # Billing & Plans (upgrade/manage billing)
 │   │   │   ├── Dashboard.tsx         # Command center
 │   │   │   ├── PrivacyPolicy.tsx     # Legal pages
 │   │   │   ├── TermsOfService.tsx
@@ -335,6 +340,7 @@ seo-operator/
 │   │   │   ├── ui/                  # Button, Input, EmptyState, LoadingSkeleton,
 │   │   │   │                         # ErrorBoundary, Toast, NotificationBell
 │   │   │   ├── Logo.tsx             # Dancing Script wordmark
+│   │   │   ├── UpgradeModal.tsx     # Free tier limit upgrade modal
 │   │   │   ├── Footer.tsx           # 4-column professional footer
 │   │   │   └── LegalLayout.tsx      # Shared wrapper for legal pages
 │   │   ├── store/

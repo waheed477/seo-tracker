@@ -2,6 +2,7 @@ const router = require('express').Router();
 const requireAuth = require('../middleware/auth');
 const Workspace = require('../models/Workspace');
 const User = require('../models/User');
+const { createCheckoutSession, createPortalSession } = require('../services/stripeService');
 
 router.use(requireAuth);
 
@@ -73,6 +74,52 @@ router.post('/:id/members', async (req, res) => {
   } catch (err) {
     console.error('[Workspaces] add member error:', err.message);
     res.status(500).json({ success: false, error: 'Failed to add member' });
+  }
+});
+
+// ── POST /api/workspaces/:id/create-checkout-session ─────────────────────────
+router.post('/:id/create-checkout-session', async (req, res) => {
+  try {
+    const workspace = await Workspace.findById(req.params.id);
+    if (!workspace) {
+      return res.status(404).json({ success: false, error: 'Workspace not found' });
+    }
+    const isMember = workspace.members.some((m) => m.userId.toString() === req.user.id);
+    if (!isMember) {
+      return res.status(403).json({ success: false, error: 'Not a member of this workspace' });
+    }
+    // Get user email for Stripe customer creation
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    const result = await createCheckoutSession(workspace._id.toString(), user.email);
+    res.json({ success: true, data: { url: result.url } });
+  } catch (err) {
+    console.error('[Workspaces] checkout session error:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to create checkout session' });
+  }
+});
+
+// ── POST /api/workspaces/:id/create-portal-session ───────────────────────────
+router.post('/:id/create-portal-session', async (req, res) => {
+  try {
+    const workspace = await Workspace.findById(req.params.id);
+    if (!workspace) {
+      return res.status(404).json({ success: false, error: 'Workspace not found' });
+    }
+    const isMember = workspace.members.some((m) => m.userId.toString() === req.user.id);
+    if (!isMember) {
+      return res.status(403).json({ success: false, error: 'Not a member of this workspace' });
+    }
+    if (!workspace.stripeCustomerId) {
+      return res.status(400).json({ success: false, error: 'No billing account linked to this workspace' });
+    }
+    const result = await createPortalSession(workspace._id.toString());
+    res.json({ success: true, data: { url: result.url } });
+  } catch (err) {
+    console.error('[Workspaces] portal session error:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to create portal session' });
   }
 });
 

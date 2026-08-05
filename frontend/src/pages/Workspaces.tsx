@@ -9,9 +9,9 @@ import EmptyState from '../components/ui/EmptyState';
 import LoadingSkeleton from '../components/ui/LoadingSkeleton';
 
 export default function Workspaces() {
+  const { user } = useAuthStore();
   const navigate = useNavigate();
-  const { token, user } = useAuthStore();
-  const addToast = useToastStore((s) => s.addToast);
+    const addToast = useToastStore((s) => s.addToast);
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -24,20 +24,19 @@ export default function Workspaces() {
   const [createError, setCreateError] = useState('');
 
   useEffect(() => {
-    if (!token) return;
-    workspaceApi.list(token).then((res) => {
+        workspaceApi.list().then((res) => {
       setFetching(false);
       if (res.success) setWorkspaces(res.data);
       else setFetchError(res.error);
     });
-  }, [token]);
+  }, []);
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
-    if (!token || !newName.trim()) return;
+    if (!newName.trim()) return;
     setCreateError('');
     setCreating(true);
-    const res = await workspaceApi.create(newName.trim(), token);
+    const res = await workspaceApi.create(newName.trim());
     setCreating(false);
     if (!res.success) {
       setCreateError(res.error);
@@ -55,8 +54,8 @@ export default function Workspaces() {
       {/* Header */}
       <div className="mb-7 flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-cream text-xl font-semibold">Workspaces</h1>
-          <p className="text-sage/60 mt-0.5 text-sm">{user ? `Signed in as ${user.email}` : 'Your SEO workspaces'}</p>
+          <h1 className="font-heading text-[var(--color-text-primary)] text-xl font-semibold">Workspaces</h1>
+          <p className="text-[var(--color-text-secondary)] mt-0.5 text-sm">{user ? `Signed in as ${user.email}` : 'Your SEO workspaces'}</p>
         </div>
         <Button
           size="sm"
@@ -71,8 +70,8 @@ export default function Workspaces() {
 
       {/* Create form */}
       {showForm && (
-        <form onSubmit={handleCreate} className="border-clay/20 bg-clay/5 mb-6 rounded-xl border p-5">
-          <h2 className="font-heading text-cream mb-4 text-sm font-semibold">New workspace</h2>
+        <form onSubmit={handleCreate} className="mb-6 rounded-xl border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/5 p-5">
+          <h2 className="font-heading text-[var(--color-text-primary)] mb-4 text-sm font-semibold">New workspace</h2>
           {createError && <p className="mb-3 text-xs text-red-400">{createError}</p>}
           <div className="flex gap-3">
             <Input
@@ -100,7 +99,7 @@ export default function Workspaces() {
       ) : workspaces.length === 0 ? (
         <EmptyState
           icon={
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-clay h-7 w-7">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7 text-[var(--color-accent)]">
               <rect x="1" y="1" width="6" height="6" rx="1" />
               <rect x="9" y="1" width="6" height="6" rx="1" />
               <rect x="1" y="9" width="6" height="6" rx="1" />
@@ -125,23 +124,23 @@ export default function Workspaces() {
               <button
                 key={ws._id}
                 onClick={() => navigate(`/app/workspaces/${ws._id}/sites`)}
-                className="group flex w-full items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-4 text-left transition-all hover:border-white/10 hover:bg-white/[0.05]"
+                className="group flex w-full items-center justify-between rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 text-left transition-all hover:border-[var(--color-accent)]/30 hover:bg-[var(--color-surface-hover)]"
               >
                 <div className="flex items-center gap-4">
-                  <div className="bg-clay/15 border-clay/20 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border">
-                    <span className="font-heading text-clay text-sm font-bold">{ws.name.charAt(0).toUpperCase()}</span>
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/15">
+                    <span className="font-heading text-sm font-bold text-[var(--color-accent)]">{ws.name.charAt(0).toUpperCase()}</span>
                   </div>
                   <div>
-                    <p className="font-heading text-cream text-sm font-semibold transition-colors group-hover:text-white">
+                    <p className="font-heading text-[var(--color-text-primary)] text-sm font-semibold transition-colors group-hover:text-white">
                       {ws.name}
                     </p>
-                    <p className="text-sage/50 mt-0.5 text-xs">
+                    <p className="mt-0.5 text-xs text-[var(--color-text-tertiary)]">
                       {ws.members.length} member{ws.members.length !== 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="border-clay/25 text-clay/80 bg-clay/10 rounded border px-2 py-0.5 text-[10px] tracking-wider uppercase">
+                  <span className="rounded border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/10 px-2 py-0.5 text-[10px] tracking-wider uppercase text-[var(--color-accent)]">
                     {myRole}
                   </span>
                   <svg
@@ -149,7 +148,7 @@ export default function Workspaces() {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.5"
-                    className="text-sage/30 group-hover:text-sage/60 h-4 w-4 transition-colors"
+                    className="h-4 w-4 text-[var(--color-text-tertiary)] transition-colors group-hover:text-[var(--color-text-secondary)]"
                   >
                     <path d="M6 4l4 4-4 4" />
                   </svg>

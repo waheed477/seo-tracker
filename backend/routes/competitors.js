@@ -47,6 +47,11 @@ async function requireMembership(workspaceId, userId, res) {
 }
 
 async function requireSiteAccess(siteId, userId, res) {
+  if (!siteId || !/^[a-f\d]{24}$/i.test(String(siteId))) {
+    res.status(400).json({ success: false, error: 'Invalid siteId' });
+    return null;
+  }
+
   const site = await Site.findById(siteId);
   if (!site) {
     res.status(404).json({ success: false, error: 'Site not found' });
@@ -213,7 +218,17 @@ router.post('/', async (req, res) => {
 
     res.status(201).json({ success: true, data: competitor });
   } catch (err) {
-    console.error('[Competitors] create error:', err.message);
+    console.error('[Competitors] create error:', err.stack || err);
+    if (err.response) {
+      console.error('[Competitors] create axios response:', err.response.status, err.response.data);
+    }
+    if (err.name === 'ValidationError') {
+      const message = Object.values(err.errors).map((e) => e.message).join('; ');
+      return res.status(400).json({ success: false, error: message || 'Validation failed' });
+    }
+    if (err.code === 11000) {
+      return res.status(409).json({ success: false, error: 'This competitor domain is already added' });
+    }
     res.status(500).json({ success: false, error: 'Failed to add competitor' });
   }
 });

@@ -43,8 +43,8 @@ export default class ErrorBoundary extends Component<Props, State> {
                 <path d="M8 5v3.5M8 11h.01" />
               </svg>
             </div>
-            <h2 className="font-heading text-cream mb-2 text-lg font-semibold">Something went wrong</h2>
-            <p className="text-sage/60 mx-auto mb-4 max-w-md text-sm">
+            <h2 className="font-heading text-[var(--color-text-primary)] mb-2 text-lg font-semibold">Something went wrong</h2>
+            <p className="text-[var(--color-text-secondary)] mx-auto mb-4 max-w-md text-sm">
               An unexpected error occurred on this page. The rest of the app is still running.
             </p>
             {this.state.error?.message && (
@@ -52,7 +52,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             )}
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
-              className="bg-clay/20 border-clay/30 text-cream hover:bg-clay/30 rounded-lg border px-4 py-2 text-sm font-medium transition-colors"
+              className="bg-[var(--color-accent)]/20 border-[var(--color-accent)]/30 text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/30 rounded-lg border px-4 py-2 text-sm font-medium transition-colors"
             >
               Try again
             </button>

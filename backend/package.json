@@ -8,8 +8,8 @@
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "test": "jest --forceExit --detectOpenHandles",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.js\"",
     "format:check": "prettier --check \"**/*.js\""
   },
@@ -17,12 +17,15 @@
     "axios": "*",
     "bcrypt": "*",
     "cheerio": "*",
+    "cookie-parser": "^1.4.7",
     "cors": "*",
     "dotenv": "*",
     "express": "*",
     "jsonwebtoken": "*",
     "mongoose": "*",
-    "node-cron": "*"
+    "node-cron": "*",
+    "resend": "^6.18.1",
+    "stripe": "^22.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

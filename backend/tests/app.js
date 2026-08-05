@@ -9,6 +9,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5000';
@@ -19,14 +20,20 @@ app.use(
     credentials: true,
   }),
 );
+
+// ── Stripe webhook route — MUST be mounted BEFORE express.json() ──────────────
+app.use('/api/webhooks', require('../routes/webhooks'));
+
 app.use(express.json());
+app.use(cookieParser());
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('../routes/auth'));
 app.use('/api/workspaces', require('../routes/workspaces'));
-app.use('/api/sites', require('../routes/sites'));
 app.use('/api/competitors', require('../routes/competitors'));
 app.use('/api/sites', require('../routes/gsc'));
+app.use('/api/sites', require('../routes/sites'));
+app.use('/api/gsc', require('../routes/gscCallback'));
 app.use('/api/sites', require('../routes/actionPlans'));
 app.use('/api/notifications', require('../routes/notifications'));
 
