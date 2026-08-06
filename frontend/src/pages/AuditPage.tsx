@@ -30,10 +30,10 @@ function score(t: AuditTechnical, pageCount: number): number {
 function ScoreBadge({ value }: { value: number }) {
   const color =
     value >= 80
-      ? 'text-emerald-400 border-emerald-800/60 bg-emerald-900/30'
+      ? 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/60'
       : value >= 50
-        ? 'text-amber-400 border-amber-800/60 bg-amber-900/30'
-        : 'text-red-400 border-red-800/60 bg-red-900/30';
+        ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/60'
+        : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800/60';
   return (
     <div className={`flex h-16 w-16 items-center justify-center rounded-full border-2 ${color}`}>
       <span className="font-heading text-xl font-bold">{value}</span>
@@ -53,9 +53,9 @@ function IssueSection({ title, count, severity, children, empty }: SectionProps)
   const [open, setOpen] = useState(count > 0);
 
   const badge = {
-    error: 'bg-red-900/40 text-red-400 border-red-800/50',
-    warning: 'bg-amber-900/40 text-amber-400 border-amber-800/50',
-    info: 'bg-sky-900/40 text-sky-400 border-sky-800/50',
+    error: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/40 dark:text-red-400 dark:border-red-800/50',
+    warning: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-800/50',
+    info: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-900/40 dark:text-sky-400 dark:border-sky-800/50',
   }[severity];
 
   return (
@@ -124,42 +124,42 @@ function UrlList({ urls, max = 10 }: { urls: string[]; max?: number }) {
 function StatusBanner({ audit }: { audit: Audit }) {
   if (audit.status === 'queued') {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-amber-800/40 bg-amber-900/20 px-5 py-4">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-        <p className="text-sm font-medium text-amber-300">Audit queued — starting shortly…</p>
+      <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/40 dark:bg-amber-900/20 px-5 py-4">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500 dark:bg-amber-400" />
+        <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Audit queued — starting shortly…</p>
       </div>
     );
   }
   if (audit.status === 'running') {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-sky-800/40 bg-sky-900/20 px-5 py-4">
-        <svg className="h-4 w-4 flex-shrink-0 animate-spin text-sky-400" viewBox="0 0 24 24" fill="none">
+      <div className="flex items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 dark:border-sky-800/40 dark:bg-sky-900/20 px-5 py-4">
+        <svg className="h-4 w-4 flex-shrink-0 animate-spin text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
         </svg>
         <div>
-          <p className="text-sm font-medium text-sky-300">Crawling in progress…</p>
-          <p className="mt-0.5 text-xs text-sky-400/60">Checking up to 20 pages — this may take up to 2 minutes.</p>
+          <p className="text-sm font-medium text-sky-800 dark:text-sky-300">Crawling in progress…</p>
+          <p className="mt-0.5 text-xs text-sky-600 dark:text-sky-400/60">Checking up to 20 pages — this may take up to 2 minutes.</p>
         </div>
       </div>
     );
   }
   if (audit.status === 'failed') {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-red-800/40 bg-red-900/20 px-5 py-4">
+      <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 dark:border-red-800/40 dark:bg-red-900/20 px-5 py-4">
         <svg
           viewBox="0 0 16 16"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          className="h-4 w-4 flex-shrink-0 text-red-400"
+          className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400"
         >
           <circle cx="8" cy="8" r="6.5" />
           <path d="M8 5v3.5M8 11h.01" />
         </svg>
         <div>
-          <p className="text-sm font-medium text-red-300">Audit failed</p>
-          {audit.error && <p className="mt-0.5 text-xs text-red-400/70">{audit.error}</p>}
+          <p className="text-sm font-medium text-red-800 dark:text-red-300">Audit failed</p>
+          {audit.error && <p className="mt-0.5 text-xs text-red-600 dark:text-red-400/70">{audit.error}</p>}
         </div>
       </div>
     );
@@ -277,7 +277,7 @@ export default function AuditPage() {
       </div>
 
       {launchError && (
-        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-300">
           {launchError}
         </div>
       )}
@@ -333,7 +333,7 @@ export default function AuditPage() {
             <div className="space-y-2 text-sm">
               <InfoRow label="robots.txt" ok={tech.robotsTxt.found} okText="Found" failText="Not found" />
               {tech.robotsTxt.disallowsEverything && (
-                <p className="ml-4 text-xs text-red-400">
+                <p className="ml-4 text-xs text-red-600 dark:text-red-400">
                   ⚠ Disallows all crawlers — search engines cannot index this site.
                 </p>
               )}
@@ -390,7 +390,7 @@ export default function AuditPage() {
             <div className="space-y-1">
               {tech.headingIssues.map((h, i) => (
                 <div key={i} className="flex items-start gap-3 border-b border-[var(--color-border)] py-1.5 last:border-0">
-                  <span className="mt-0.5 flex-shrink-0 rounded border border-amber-800/40 bg-amber-900/30 px-1.5 py-0.5 text-[10px] text-amber-400">
+                  <span className="mt-0.5 flex-shrink-0 rounded border border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/30 px-1.5 py-0.5 text-[10px] dark:text-amber-400">
                     {h.issue}
                   </span>
                   <a
@@ -436,14 +436,14 @@ export default function AuditPage() {
               {tech.brokenInternalLinks.map((bl, i) => (
                 <div key={i} className="border-b border-[var(--color-border)] py-2 last:border-0">
                   <div className="mb-1 flex items-center gap-2">
-                    <span className="flex-shrink-0 rounded border border-red-800/40 bg-red-900/30 px-1.5 py-0.5 text-[10px] text-red-400">
+                    <span className="flex-shrink-0 rounded border border-red-200 bg-red-100 text-red-800 dark:border-red-800/40 dark:bg-red-900/30 px-1.5 py-0.5 text-[10px] dark:text-red-400">
                       {bl.status ?? 'ERR'}
                     </span>
                     <a
                       href={bl.brokenUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="truncate font-mono text-xs text-red-400/80 hover:text-red-300"
+                      className="truncate font-mono text-xs text-red-600 hover:text-red-500 dark:text-red-400/80 dark:hover:text-red-300"
                     >
                       {bl.brokenUrl}
                     </a>
@@ -479,8 +479,8 @@ function InfoRow({ label, ok, okText, failText }: { label: string; ok: boolean; 
   return (
     <div className="flex items-center gap-3">
       <span className="text-[var(--color-text-secondary)] w-24 text-xs">{label}</span>
-      <span className={`flex items-center gap-1.5 text-xs ${ok ? 'text-emerald-400' : 'text-red-400'}`}>
-        <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${ok ? 'bg-emerald-400' : 'bg-red-400'}`} />
+      <span className={`flex items-center gap-1.5 text-xs ${ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+        <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${ok ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-red-500 dark:bg-red-400'}`} />
         {ok ? okText : failText}
       </span>
     </div>

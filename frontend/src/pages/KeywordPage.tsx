@@ -9,10 +9,10 @@ import LoadingSkeleton from '../components/ui/LoadingSkeleton';
 
 // ── Intent badge colours ──────────────────────────────────────────────────────
 const INTENT_STYLES: Record<string, string> = {
-  informational: 'bg-sky-900/40 text-sky-400 border-sky-800/50',
-  transactional: 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50',
-  navigational: 'bg-amber-900/40 text-amber-400 border-amber-800/50',
-  commercial: 'bg-purple-900/40 text-purple-400 border-purple-800/50',
+  informational: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-900/40 dark:text-sky-400 dark:border-sky-800/50',
+  transactional: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800/50',
+  navigational: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-800/50',
+  commercial: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/40 dark:text-purple-400 dark:border-purple-800/50',
 };
 
 function DifficultyBar({ value }: { value: number }) {
@@ -140,7 +140,7 @@ export default function KeywordPage() {
           <Button size="sm" onClick={handleResearch} loading={running}>
             Research Keywords
           </Button>
-          {runError && <p className="text-xs text-red-400">{runError}</p>}
+          {runError && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{runError}</p>}
         </div>
         <p className="text-[var(--color-text-tertiary)] mt-3 text-[10px] italic">
           ⚠ Difficulty scores are AI estimates based on general knowledge — they are NOT live search data from any SERP
@@ -151,8 +151,8 @@ export default function KeywordPage() {
       {/* Clusters display */}
       {fetching ? (
         <LoadingSkeleton rows={3} height="h-24" />
-      ) : fetchError && !clusters ? (
-        <div className="rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+      ) : fetchError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-300">
           {fetchError}
         </div>
       ) : clusterNames.length === 0 ? (
@@ -191,13 +191,7 @@ export default function KeywordPage() {
             <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">
               <p className="font-heading text-[var(--color-text-primary)] text-sm font-semibold">{activeCluster}</p>
               <div className="flex items-center gap-1.5">
-                <svg
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="h-3.5 w-3.5 text-amber-400/60"
-                >
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400/60">
                   <circle cx="8" cy="8" r="6.5" />
                   <path d="M8 5v3.5M8 11h.01" />
                 </svg>

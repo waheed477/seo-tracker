@@ -72,7 +72,7 @@ export default function Workspaces() {
       {showForm && (
         <form onSubmit={handleCreate} className="mb-6 rounded-xl border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/5 p-5">
           <h2 className="font-heading text-[var(--color-text-primary)] mb-4 text-sm font-semibold">New workspace</h2>
-          {createError && <p className="mb-3 text-xs text-red-400">{createError}</p>}
+          {createError && <p className="mb-3 text-xs text-red-600 dark:text-red-400">{createError}</p>}
           <div className="flex gap-3">
             <Input
               placeholder="My Agency · Acme Corp · Personal"
@@ -93,7 +93,7 @@ export default function Workspaces() {
       {fetching ? (
         <LoadingSkeleton rows={2} height="h-20" />
       ) : fetchError ? (
-        <div className="rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/20 dark:bg-red-900/20 dark:text-red-300">
           {fetchError}
         </div>
       ) : workspaces.length === 0 ? (

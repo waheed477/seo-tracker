@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/api';
 import { useAuthStore } from '../store/authStore';
@@ -17,6 +17,20 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Push a dummy state so the first back button press is intercepted
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      navigate('/');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [navigate]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -45,14 +59,16 @@ export default function Register() {
 
       <div className="flex flex-1 items-center justify-center p-4">
         <div className="fade-in relative w-full max-w-sm">
-          <Logo variant="full" className="mb-8" />
+          <Link to="/" className="block cursor-pointer mb-8 transition-opacity hover:opacity-90">
+            <Logo variant="full" />
+          </Link>
 
           <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-7">
             <h1 className="font-heading text-[var(--color-text-primary)] mb-1 text-xl font-semibold">Create your account</h1>
             <p className="text-[var(--color-text-secondary)] mb-6 text-sm">Start optimising in minutes</p>
 
             {error && (
-              <div className="mb-4 rounded-lg border border-red-500/30 bg-red-900/30 px-3.5 py-2.5 text-sm text-red-300">
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-900/30 dark:text-red-300">
                 {error}
               </div>
             )}

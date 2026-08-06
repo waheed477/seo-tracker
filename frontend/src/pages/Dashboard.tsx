@@ -46,7 +46,7 @@ export default function Dashboard() {
   if (fetchError) {
     return (
       <div className="p-6 lg:p-8">
-        <div className="rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/20 dark:bg-red-900/20 dark:text-red-300">
           {fetchError}
         </div>
       </div>

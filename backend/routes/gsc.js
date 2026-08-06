@@ -227,7 +227,17 @@ router.post('/:id/gsc/sync', async (req, res) => {
     res.json({ success: true, data: { syncedRows: rows.length } });
   } catch (err) {
     console.error('[GSC] sync error:', err.message);
-    res.status(500).json({ success: false, error: err.message ?? 'Failed to sync GSC data' });
+    if (err.name === 'GscError' || (err.code && err.code.startsWith('GSC_'))) {
+      const statusCode = err.code === 'GSC_PROPERTY_NOT_VERIFIED' ? 403 
+                       : err.code === 'GSC_TOKEN_EXPIRED_OR_REVOKED' ? 401 
+                       : 500;
+      return res.status(statusCode).json({
+        success: false,
+        error: err.code,
+        message: err.message,
+      });
+    }
+    res.status(500).json({ success: false, error: 'GENERIC_ERROR', message: err.message ?? 'Failed to sync GSC data' });
   }
 });
 

@@ -74,6 +74,21 @@ router.get('/callback', async (req, res) => {
     // The domain property in GSC is usually "https://example.com/" — default to https://<domain>/
     const gscSiteUrl = `https://${site.domain}/`;
 
+    // Test connection by making a small Search Analytics query to check verified access
+    const tempSite = {
+      gscConnected: true,
+      gscRefreshToken: encryptedRefreshToken,
+      gscSiteUrl,
+    };
+
+    try {
+      await gscService.fetchSearchAnalytics(tempSite, 1);
+    } catch (verifyErr) {
+      console.error('[GSC] connection verification failed in callback:', verifyErr.code || verifyErr.message);
+      const errMsg = verifyErr.code || 'GSC_VERIFICATION_FAILED';
+      return res.redirect(rankingsUrl(`gsc=error&msg=${encodeURIComponent(errMsg)}`));
+    }
+
     await Site.findByIdAndUpdate(siteId, {
       gscConnected: true,
       gscRefreshToken: encryptedRefreshToken,

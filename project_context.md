@@ -117,12 +117,16 @@ parameter instead of the URL path.
      token exchange. Missing/invalid/expired state → 400, no exchange attempted.
    → Decodes siteId from the verified state
    → Exchanges code for access_token + refresh_token
-   → encrypt(refresh_token) with AES-256-CBC + SITE_ENCRYPTION_KEY
-   → Store encrypted refresh token + gscConnected=true + gscSiteUrl in Site doc
-   → Redirect browser to FRONTEND_URL + /app/sites/:id/rankings?gsc=connected
+   → Tests connection by querying Search Console API for the site domain prefix (https://<domain>/).
+     If verification fails (403 Forbidden), aborts the connection flow, does not save to DB, and redirects browser to /app/sites/:id/rankings?gsc=error&msg=GSC_PROPERTY_NOT_VERIFIED.
+   → Otherwise (success), encrypt(refresh_token) with AES-256-CBC + SITE_ENCRYPTION_KEY
+   → Stores encrypted refresh token + gscConnected=true + gscSiteUrl in Site doc
+   → Redirects browser to FRONTEND_URL + /app/sites/:id/rankings?gsc=connected
    → If the user denied consent, Google sends ?error=... instead of ?code — this is
-     handled gracefully: redirect to the rankings page with ?gsc=error&msg=... (no crash).
-5. For all future GSC API calls: decrypt(refresh_token) → refresh access_token → call GSC API
+     handled gracefully: redirects to the rankings page with ?gsc=error&msg=... (no crash).
+5. For all future GSC API calls (e.g. manual sync):
+   - decrypt(refresh_token) → refresh access_token → call GSC API
+   - Standardizes GSC API errors (e.g., 403 Forbidden maps to `GSC_PROPERTY_NOT_VERIFIED`, invalid_grant/401 maps to `GSC_TOKEN_EXPIRED_OR_REVOKED`, 429 maps to `GSC_RATE_LIMIT_EXCEEDED`) to prevent raw technical leaks and display helpful instructional content.
 ```
 
 **Redirect URI to register in Google Cloud Console** (Authorized redirect URIs):
@@ -351,6 +355,8 @@ Notifications are workspace-scoped (not per-user). When an async job completes, 
 
 | Component | Purpose |
 |-----------|---------|
+| `Badge` | Shared semantic badge/pill component with error, warning, success, info, and neutral variants for light/dark mode contrast |
+| `StatusBanner` | Shared async state banner (queued/running/failed) for data fetching processes like audits or analysis |
 | `Logo` | Brand logo with two variants (full/compact) and light/dark theme — uses Dancing Script signature wordmark |
 | `Footer` | Professional 4-column footer with brand, product links, company links, and legal links — appears on all pages |
 | `LegalLayout` | Shared wrapper for static legal/trust pages — navy background, logo, back navigation, consistent typography |

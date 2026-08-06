@@ -11,17 +11,17 @@ const POLL_INTERVAL_MS = 3000;
 
 // ── Agent badge ───────────────────────────────────────────────────────────────
 const AGENT_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  technical: { bg: 'bg-red-900/30', text: 'text-red-400', border: 'border-red-800/40', label: 'Technical' },
-  content: { bg: 'bg-sky-900/30', text: 'text-sky-400', border: 'border-sky-800/40', label: 'Content' },
-  competitor: { bg: 'bg-purple-900/30', text: 'text-purple-400', border: 'border-purple-800/40', label: 'Competitor' },
-  rankings: { bg: 'bg-emerald-900/30', text: 'text-emerald-400', border: 'border-emerald-800/40', label: 'Rankings' },
-  keywords: { bg: 'bg-amber-900/30', text: 'text-amber-400', border: 'border-amber-800/40', label: 'Keywords' },
+  technical: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-400', border: 'border-red-200 dark:border-red-800/40', label: 'Technical' },
+  content: { bg: 'bg-sky-100 dark:bg-sky-900/30', text: 'text-sky-800 dark:text-sky-400', border: 'border-sky-200 dark:border-sky-800/40', label: 'Content' },
+  competitor: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-800 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800/40', label: 'Competitor' },
+  rankings: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-800 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-800/40', label: 'Rankings' },
+  keywords: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-800 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-800/40', label: 'Keywords' },
 };
 
 // ── Priority badge ────────────────────────────────────────────────────────────
 const PRIORITY_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  high: { bg: 'bg-red-900/30', text: 'text-red-400', border: 'border-red-800/40', label: 'High' },
-  medium: { bg: 'bg-amber-900/30', text: 'text-amber-400', border: 'border-amber-800/40', label: 'Medium' },
+  high: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-400', border: 'border-red-200 dark:border-red-800/40', label: 'High' },
+  medium: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-800 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-800/40', label: 'Medium' },
   low: { bg: 'bg-[var(--color-surface)]', text: 'text-[var(--color-text-tertiary)]', border: 'border-[var(--color-border)]', label: 'Low' },
 };
 
@@ -36,42 +36,42 @@ const STATUS_OPTIONS: { value: ActionItem['status']; label: string; icon: string
 function StatusBanner({ plan }: { plan: ActionPlan }) {
   if (plan.status === 'queued') {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-amber-800/40 bg-amber-900/20 px-5 py-4">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-        <p className="text-sm font-medium text-amber-300">Analyzing all data sources…</p>
+      <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/40 dark:bg-amber-900/20 px-5 py-4">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500 dark:bg-amber-400" />
+        <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Analyzing all data sources…</p>
       </div>
     );
   }
   if (plan.status === 'running') {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-sky-800/40 bg-sky-900/20 px-5 py-4">
-        <svg className="h-4 w-4 flex-shrink-0 animate-spin text-sky-400" viewBox="0 0 24 24" fill="none">
+      <div className="flex items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 dark:border-sky-800/40 dark:bg-sky-900/20 px-5 py-4">
+        <svg className="h-4 w-4 flex-shrink-0 animate-spin text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
         </svg>
         <div>
-          <p className="text-sm font-medium text-sky-300">Generating your action plan…</p>
-          <p className="mt-0.5 text-xs text-sky-400/60">Analyzing audit, keywords, competitors, and rankings data.</p>
+          <p className="text-sm font-medium text-sky-800 dark:text-sky-300">Generating your action plan…</p>
+          <p className="mt-0.5 text-xs text-sky-600 dark:text-sky-400/60">Analyzing audit, keywords, competitors, and rankings data.</p>
         </div>
       </div>
     );
   }
   if (plan.status === 'failed') {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-red-800/40 bg-red-900/20 px-5 py-4">
+      <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 dark:border-red-800/40 dark:bg-red-900/20 px-5 py-4">
         <svg
           viewBox="0 0 16 16"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          className="h-4 w-4 flex-shrink-0 text-red-400"
+          className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400"
         >
           <circle cx="8" cy="8" r="6.5" />
           <path d="M8 5v3.5M8 11h.01" />
         </svg>
         <div>
-          <p className="text-sm font-medium text-red-300">Generation failed</p>
-          {plan.error && <p className="mt-0.5 text-xs text-red-400/70">{plan.error}</p>}
+          <p className="text-sm font-medium text-red-800 dark:text-red-300">Generation failed</p>
+          {plan.error && <p className="mt-0.5 text-xs text-red-600 dark:text-red-400/70">{plan.error}</p>}
         </div>
       </div>
     );
@@ -135,9 +135,9 @@ function ActionItemCard({
               <span
                 className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${
                   item.status === 'done'
-                    ? 'border-emerald-800/40 bg-emerald-900/30 text-emerald-400'
+                    ? 'border-emerald-200 bg-emerald-100 text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-900/30 dark:text-emerald-400'
                     : item.status === 'in_progress'
-                      ? 'border-amber-800/40 bg-amber-900/30 text-amber-400'
+                      ? 'border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/30 dark:text-amber-400'
                       : 'text-[var(--color-text-tertiary)] border-[var(--color-border)] bg-[var(--color-surface)]'
                 }`}
               >
@@ -300,7 +300,7 @@ export default function ActionPlanPage() {
       </div>
 
       {genError && (
-        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-300">
           {genError}
         </div>
       )}
@@ -366,10 +366,10 @@ export default function ActionPlanPage() {
           {plan.status === 'done' && items.length > 0 && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
-                { label: 'High Priority', value: highCount, color: 'text-red-400' },
-                { label: 'Medium Priority', value: medCount, color: 'text-amber-400' },
+                { label: 'High Priority', value: highCount, color: 'text-red-600 dark:text-red-400' },
+                { label: 'Medium Priority', value: medCount, color: 'text-amber-600 dark:text-amber-400' },
                 { label: 'Low Priority', value: lowCount, color: 'text-[var(--color-text-secondary)]' },
-                { label: 'Completed', value: doneCount, color: 'text-emerald-400' },
+                { label: 'Completed', value: doneCount, color: 'text-emerald-600 dark:text-emerald-400' },
               ].map((s) => (
                 <div key={s.label} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
                   <p className="text-[var(--color-text-tertiary)] text-[10px] tracking-wider uppercase">{s.label}</p>

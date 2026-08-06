@@ -115,7 +115,7 @@ export default function BillingPage() {
                 <div className="flex items-center gap-2">
                   <h2 className="font-heading text-[var(--color-text-primary)] text-sm font-semibold">{ws.name}</h2>
                   {ws.plan === 'pro' ? (
-                    <span className="rounded-full border border-emerald-800/50 bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                    <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-900/40 dark:text-emerald-400">
                       PRO
                     </span>
                   ) : (
@@ -125,7 +125,7 @@ export default function BillingPage() {
                   )}
                 </div>
                 {ws.plan === 'pro' && ws.planStatus === 'past_due' && (
-                  <p className="mt-1 text-xs text-amber-400">
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
                     ⚠ Payment overdue — please update your payment method
                   </p>
                 )}

@@ -14,6 +14,54 @@ const { decrypt } = require('../lib/encryption');
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GSC_API_BASE = 'https://www.googleapis.com/webmasters/v3';
 
+class GscError extends Error {
+  constructor(code, message, originalMessage) {
+    super(message);
+    this.name = 'GscError';
+    this.code = code;
+    this.originalMessage = originalMessage;
+  }
+}
+
+function handleGscError(err) {
+  if (err instanceof GscError) {
+    throw err;
+  }
+  if (err.response) {
+    const status = err.response.status;
+    const data = err.response.data || {};
+    const googleMsg = data.error?.message || data.error_description || err.message;
+
+    if (status === 403) {
+      throw new GscError(
+        'GSC_PROPERTY_NOT_VERIFIED',
+        'This domain is not verified in your connected Google Search Console account.',
+        googleMsg
+      );
+    }
+    if (status === 401 || (status === 400 && (data.error === 'invalid_grant' || data.error === 'invalid_request'))) {
+      throw new GscError(
+        'GSC_TOKEN_EXPIRED_OR_REVOKED',
+        'Google Search Console connection has expired or been revoked. Please reconnect your account.',
+        googleMsg
+      );
+    }
+    if (status === 429) {
+      throw new GscError(
+        'GSC_RATE_LIMIT_EXCEEDED',
+        'Google Search Console API rate limit exceeded. Please try again later.',
+        googleMsg
+      );
+    }
+    throw new GscError(
+      'GSC_API_ERROR',
+      `Google Search Console API error: ${googleMsg}`,
+      googleMsg
+    );
+  }
+  throw err;
+}
+
 // ── OAuth helpers ─────────────────────────────────────────────────────────────
 
 /**
@@ -64,26 +112,30 @@ async function exchangeCode(code) {
     throw new Error('Google OAuth env vars not configured');
   }
 
-  const response = await axios.post(
-    GOOGLE_TOKEN_URL,
-    {
-      code,
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
-      grant_type: 'authorization_code',
-    },
-    {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      timeout: 30_000,
-    },
-  );
+  try {
+    const response = await axios.post(
+      GOOGLE_TOKEN_URL,
+      {
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+      },
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        timeout: 30_000,
+      },
+    );
 
-  return {
-    accessToken: response.data.access_token,
-    refreshToken: response.data.refresh_token,
-    expiresIn: response.data.expires_in,
-  };
+    return {
+      accessToken: response.data.access_token,
+      refreshToken: response.data.refresh_token,
+      expiresIn: response.data.expires_in,
+    };
+  } catch (err) {
+    handleGscError(err);
+  }
 }
 
 /**
@@ -104,21 +156,25 @@ async function refreshAccessToken(site) {
 
   const refreshToken = decrypt(site.gscRefreshToken);
 
-  const response = await axios.post(
-    GOOGLE_TOKEN_URL,
-    {
-      refresh_token: refreshToken,
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: 'refresh_token',
-    },
-    {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      timeout: 30_000,
-    },
-  );
+  try {
+    const response = await axios.post(
+      GOOGLE_TOKEN_URL,
+      {
+        refresh_token: refreshToken,
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'refresh_token',
+      },
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        timeout: 30_000,
+      },
+    );
 
-  return response.data.access_token;
+    return response.data.access_token;
+  } catch (err) {
+    handleGscError(err);
+  }
 }
 
 // ── Search Analytics ──────────────────────────────────────────────────────────
@@ -131,48 +187,52 @@ async function refreshAccessToken(site) {
  * @returns {Promise<{queryText, page, avgPosition, clicks, impressions, ctr, date}[]>}
  */
 async function fetchSearchAnalytics(site, days = 30) {
-  if (!site.gscConnected) throw new Error('GSC not connected for this site');
-  if (!site.gscSiteUrl) throw new Error('No GSC site URL configured');
+  try {
+    if (!site.gscConnected) throw new Error('GSC not connected for this site');
+    if (!site.gscSiteUrl) throw new Error('No GSC site URL configured');
 
-  const accessToken = await refreshAccessToken(site);
+    const accessToken = await refreshAccessToken(site);
 
-  const endDate = new Date(); // today
-  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const endDate = new Date(); // today
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  // GSC data is typically 2-3 days behind, so we query up to 3 days ago
-  endDate.setDate(endDate.getDate() - 3);
-  startDate.setDate(startDate.getDate() - 3);
+    // GSC data is typically 2-3 days behind, so we query up to 3 days ago
+    endDate.setDate(endDate.getDate() - 3);
+    startDate.setDate(startDate.getDate() - 3);
 
-  const formatDate = (d) => d.toISOString().split('T')[0];
+    const formatDate = (d) => d.toISOString().split('T')[0];
 
-  const response = await axios.post(
-    `${GSC_API_BASE}/sites/${encodeURIComponent(site.gscSiteUrl)}/searchAnalytics/query`,
-    {
-      startDate: formatDate(startDate),
-      endDate: formatDate(endDate),
-      dimensions: ['query', 'page'],
-      type: 'web',
-      rowLimit: 1000,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+    const response = await axios.post(
+      `${GSC_API_BASE}/sites/${encodeURIComponent(site.gscSiteUrl)}/searchAnalytics/query`,
+      {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+        dimensions: ['query', 'page'],
+        type: 'web',
+        rowLimit: 1000,
       },
-      timeout: 30_000,
-    },
-  );
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30_000,
+      },
+    );
 
-  const rows = response.data.rows ?? [];
-  return rows.map((row) => ({
-    queryText: row.keys[0],
-    page: row.keys[1],
-    avgPosition: Math.round(row.position * 10) / 10,
-    clicks: row.clicks,
-    impressions: row.impressions,
-    ctr: Math.round(row.ctr * 10000) / 10000, // store as decimal (0.05 = 5%)
-    date: formatDate(endDate), // use end date as the snapshot date
-  }));
+    const rows = response.data.rows ?? [];
+    return rows.map((row) => ({
+      queryText: row.keys[0],
+      page: row.keys[1],
+      avgPosition: Math.round(row.position * 10) / 10,
+      clicks: row.clicks,
+      impressions: row.impressions,
+      ctr: Math.round(row.ctr * 10000) / 10000, // store as decimal (0.05 = 5%)
+      date: formatDate(endDate), // use end date as the snapshot date
+    }));
+  } catch (err) {
+    handleGscError(err);
+  }
 }
 
 module.exports = {
@@ -180,4 +240,5 @@ module.exports = {
   exchangeCode,
   refreshAccessToken,
   fetchSearchAnalytics,
+  GscError,
 };

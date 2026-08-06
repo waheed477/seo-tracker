@@ -13,22 +13,22 @@ const POLL_INTERVAL_MS = 3000;
 function StatusBanner({ report }: { report: ContentGapReport }) {
   if (report.status === 'queued') {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-amber-800/40 bg-amber-900/20 px-5 py-4">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-        <p className="text-sm font-medium text-amber-300">Analysis queued — starting shortly…</p>
+      <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/40 dark:bg-amber-900/20 px-5 py-4">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500 dark:bg-amber-400" />
+        <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Analysis queued — starting shortly…</p>
       </div>
     );
   }
   if (report.status === 'running') {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-sky-800/40 bg-sky-900/20 px-5 py-4">
-        <svg className="h-4 w-4 flex-shrink-0 animate-spin text-sky-400" viewBox="0 0 24 24" fill="none">
+      <div className="flex items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 dark:border-sky-800/40 dark:bg-sky-900/20 px-5 py-4">
+        <svg className="h-4 w-4 flex-shrink-0 animate-spin text-sky-600 dark:text-sky-400" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
         </svg>
         <div>
-          <p className="text-sm font-medium text-sky-300">Crawling & analyzing…</p>
-          <p className="mt-0.5 text-xs text-sky-400/60">
+          <p className="text-sm font-medium text-sky-800 dark:text-sky-300">Crawling & analyzing…</p>
+          <p className="mt-0.5 text-xs text-sky-600 dark:text-sky-400/60">
             This may take 2–5 minutes — crawling both sites and running AI analysis.
           </p>
         </div>
@@ -37,20 +37,20 @@ function StatusBanner({ report }: { report: ContentGapReport }) {
   }
   if (report.status === 'failed') {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-red-800/40 bg-red-900/20 px-5 py-4">
+      <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 dark:border-red-800/40 dark:bg-red-900/20 px-5 py-4">
         <svg
           viewBox="0 0 16 16"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          className="h-4 w-4 flex-shrink-0 text-red-400"
+          className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400"
         >
           <circle cx="8" cy="8" r="6.5" />
           <path d="M8 5v3.5M8 11h.01" />
         </svg>
         <div>
-          <p className="text-sm font-medium text-red-300">Analysis failed</p>
-          {report.error && <p className="mt-0.5 text-xs text-red-400/70">{report.error}</p>}
+          <p className="text-sm font-medium text-red-800 dark:text-red-300">Analysis failed</p>
+          {report.error && <p className="mt-0.5 text-xs text-red-600 dark:text-red-400/70">{report.error}</p>}
         </div>
       </div>
     );
@@ -70,7 +70,7 @@ function GapRow({
         <p className="font-heading text-[var(--color-text-primary)] text-sm font-semibold">{gap.topic}</p>
         <div className="ml-auto flex items-center gap-1.5">
           {gap.competitorHasIt ? (
-            <span className="rounded border border-emerald-800/40 bg-emerald-900/30 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
+            <span className="rounded border border-emerald-200 bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-900/30 dark:text-emerald-400">
               Competitor ✓
             </span>
           ) : (
@@ -79,11 +79,11 @@ function GapRow({
             </span>
           )}
           {gap.userHasIt ? (
-            <span className="rounded border border-emerald-800/40 bg-emerald-900/30 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
+            <span className="rounded border border-emerald-200 bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-900/30 dark:text-emerald-400">
               You ✓
             </span>
           ) : (
-            <span className="rounded border border-red-800/40 bg-red-900/30 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
+            <span className="rounded border border-red-200 bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800 dark:border-red-800/40 dark:bg-red-900/30 dark:text-red-400">
               You ✗
             </span>
           )}
@@ -290,12 +290,12 @@ export default function CompetitorPage() {
               Add
             </Button>
           </div>
-          {addError && <p className="mt-2 text-xs text-red-400">{addError}</p>}
+          {addError && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{addError}</p>}
         </div>
       )}
 
       {analyzeError && (
-        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-300">
           {analyzeError}
         </div>
       )}
@@ -304,7 +304,7 @@ export default function CompetitorPage() {
       {fetching ? (
         <LoadingSkeleton rows={3} height="h-20" />
       ) : fetchError ? (
-        <div className="rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-300">
           {fetchError}
         </div>
       ) : competitors.length === 0 ? (

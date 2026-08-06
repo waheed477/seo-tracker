@@ -1,9 +1,9 @@
 import { useToastStore, ToastType } from '../../store/toastStore';
 
 const TYPE_STYLES: Record<ToastType, string> = {
-  success: 'bg-emerald-900/80 border-emerald-700/50 text-emerald-200',
-  error: 'bg-red-900/80 border-red-700/50 text-red-200',
-  info: 'bg-sky-900/80 border-sky-700/50 text-sky-200',
+  success: 'bg-emerald-50/95 border-emerald-200 text-emerald-800 dark:bg-emerald-900/80 dark:border-emerald-700/50 dark:text-emerald-200',
+  error: 'bg-red-50/95 border-red-200 text-red-800 dark:bg-red-900/80 dark:border-red-700/50 dark:text-red-200',
+  info: 'bg-sky-50/95 border-sky-200 text-sky-800 dark:bg-sky-900/80 dark:border-sky-700/50 dark:text-sky-200',
 };
 
 const TYPE_ICONS: Record<ToastType, string> = {

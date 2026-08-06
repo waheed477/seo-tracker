@@ -157,7 +157,7 @@ export default function Sites() {
       {fetching ? (
         <LoadingSkeleton rows={3} height="h-20" />
       ) : fetchError ? (
-        <div className="rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-300">
           {fetchError}
         </div>
       ) : sites.length === 0 ? (
@@ -208,7 +208,7 @@ export default function Sites() {
 
               <div className="flex flex-wrap items-center gap-2">
                 {site.gscConnected ? (
-                  <span className="rounded-full border border-emerald-800/50 bg-emerald-900/40 px-2 py-0.5 text-[10px] text-emerald-400">
+                  <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-900/40 dark:text-emerald-400">
                     GSC
                   </span>
                 ) : null}

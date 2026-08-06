@@ -46,12 +46,12 @@ export default function ForgotPassword() {
             <p className="text-[var(--color-text-secondary)] mb-6 text-sm">Enter your email to receive a reset link.</p>
 
             {error && (
-              <div className="mb-4 rounded-lg border border-red-500/30 bg-red-900/30 px-3.5 py-2.5 text-sm text-red-300">
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-900/30 dark:text-red-300">
                 {error}
               </div>
             )}
             {message && (
-              <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-900/30 px-3.5 py-2.5 text-sm text-emerald-200">
+              <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-900/30 dark:text-emerald-200">
                 {message}
               </div>
             )}

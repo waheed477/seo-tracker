@@ -8,9 +8,9 @@ import LoadingSkeleton from '../components/ui/LoadingSkeleton';
 
 // ── Readability badge ─────────────────────────────────────────────────────────
 const READABILITY_STYLES: Record<string, string> = {
-  Easy: 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50',
-  Moderate: 'bg-amber-900/40 text-amber-400 border-amber-800/50',
-  Difficult: 'bg-red-900/40 text-red-400 border-red-800/50',
+  Easy: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800/50',
+  Moderate: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-800/50',
+  Difficult: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/40 dark:text-red-400 dark:border-red-800/50',
 };
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ export default function ContentReviewPage() {
         </Button>
 
         {runError && (
-          <div className="rounded-lg border border-red-500/20 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/20 dark:bg-red-900/20 dark:text-red-300">
             {runError}
           </div>
         )}
@@ -150,13 +150,13 @@ export default function ContentReviewPage() {
               {result.suggestions.map((s, i) => (
                 <div key={i} className="px-5 py-4">
                   <div className="mb-1.5 flex items-start gap-2">
-                    <span className="mt-0.5 flex-shrink-0 rounded border border-red-800/40 bg-red-900/30 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
+                    <span className="mt-0.5 flex-shrink-0 rounded border border-red-200 bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800 dark:border-red-800/40 dark:bg-red-900/30 dark:text-red-400">
                       Issue
                     </span>
                     <p className="text-[var(--color-text-primary)] text-sm font-medium">{s.issue}</p>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="mt-0.5 flex-shrink-0 rounded border border-emerald-800/40 bg-emerald-900/30 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
+                    <span className="mt-0.5 flex-shrink-0 rounded border border-emerald-200 bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-900/30 dark:text-emerald-400">
                       Fix
                     </span>
                     <p className="text-[var(--color-text-secondary)] text-sm">{s.recommendation}</p>
