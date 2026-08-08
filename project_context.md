@@ -786,8 +786,9 @@ seo-operator/
 | `STRIPE_SECRET_KEY` | ✅* | Stripe test-mode secret key (`sk_test_...`) |
 | `STRIPE_WEBHOOK_SECRET` | ✅* | Stripe webhook signing secret (`whsec_...`) |
 | `STRIPE_PRICE_ID_PRO` | ✅* | Stripe Price ID for Pro plan (`price_...`) |
+| `BILLING_ENABLED` | Optional | Set to `false` to temporarily disable Stripe billing/upgrades. Sites become unlimited. Defaults to `true`. |
 
-\* Required only if using Stripe billing.
+\* Required only if using Stripe billing (and `BILLING_ENABLED` is true).
 
 \* Required only if using Google Search Console rank tracking.
 

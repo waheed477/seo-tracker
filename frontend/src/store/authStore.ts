@@ -14,7 +14,13 @@ interface AuthState {
    * re-hydrates it via AuthHydrator. */
   token: string | null;
   isAuthenticated: boolean;
-  setAuth: (user: AuthUser, token?: string | null) => void;
+  /**
+   * Reflects the backend BILLING_ENABLED env var.
+   * Defaults to true until /me is fetched.
+   * When false: upgrade buttons are hidden and site-limit enforcement is skipped.
+   */
+  billingEnabled: boolean;
+  setAuth: (user: AuthUser, token?: string | null, billingEnabled?: boolean) => void;
   clearAuth: () => void;
 }
 
@@ -22,6 +28,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
-  setAuth: (user, token = null) => set({ user, token, isAuthenticated: true }),
-  clearAuth: () => set({ user: null, token: null, isAuthenticated: false }),
+  billingEnabled: true, // optimistic default — overwritten once /me responds
+  setAuth: (user, token = null, billingEnabled = true) =>
+    set({ user, token, isAuthenticated: true, billingEnabled }),
+  clearAuth: () => set({ user: null, token: null, isAuthenticated: false, billingEnabled: true }),
 }));

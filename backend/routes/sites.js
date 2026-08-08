@@ -125,8 +125,11 @@ router.post('/', async (req, res) => {
       return res.status(409).json({ success: false, error: 'This domain is already in the workspace' });
     }
 
-    // ── Free tier limit enforcement ──────────────────────────────────────
-    if (workspace.plan === 'free') {
+    // ── Free tier limit enforcement ────────────────────────────────────
+    // Only enforced when BILLING_ENABLED=true (default). Set BILLING_ENABLED=false
+    // in Render env vars to allow unlimited sites while billing is being configured.
+    const billingEnabled = process.env.BILLING_ENABLED !== 'false';
+    if (billingEnabled && workspace.plan === 'free') {
       const currentSiteCount = await Site.countDocuments({ workspaceId });
       if (currentSiteCount >= FREE_TIER_SITE_LIMIT) {
         return res.status(403).json({

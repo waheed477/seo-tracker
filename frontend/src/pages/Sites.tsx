@@ -18,7 +18,8 @@ const FREE_TIER_SITE_LIMIT = 1;
 export default function Sites() {
   const { id: workspaceId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-    const setCurrentWorkspaceId = useWorkspaceStore((s) => s.setCurrentWorkspaceId);
+  const billingEnabled = useAuthStore((s) => s.billingEnabled);
+  const setCurrentWorkspaceId = useWorkspaceStore((s) => s.setCurrentWorkspaceId);
   const addToast = useToastStore((s) => s.addToast);
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -111,7 +112,7 @@ export default function Sites() {
               <span className="rounded-full border border-emerald-800/50 bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
                 PRO
               </span>
-            ) : isFreePlan ? (
+            ) : isFreePlan && billingEnabled ? (
               <span className="text-[var(--color-text-tertiary)] text-xs">
                 Sites used: <span className="text-[var(--color-text-primary)] font-medium">{sites.length}</span> / {FREE_TIER_SITE_LIMIT}
               </span>
@@ -225,13 +226,15 @@ export default function Sites() {
       )}
 
       {/* Upgrade modal */}
-      <UpgradeModal
-        open={upgradeModal.open}
-        onClose={() => setUpgradeModal((prev) => ({ ...prev, open: false }))}
-        workspaceId={workspaceId ?? ''}
-        currentCount={upgradeModal.current}
-        limit={upgradeModal.limit}
-      />
+      {billingEnabled && (
+        <UpgradeModal
+          open={upgradeModal.open}
+          onClose={() => setUpgradeModal((prev) => ({ ...prev, open: false }))}
+          workspaceId={workspaceId ?? ''}
+          currentCount={upgradeModal.current}
+          limit={upgradeModal.limit}
+        />
+      )}
     </div>
   );
 }

@@ -35,7 +35,7 @@ function AuthHydrator({ children }: { children: React.ReactNode }) {
         // Re-hydrate both user AND the in-memory token so all subsequent
         // API requests can include it as Authorization header even if the
         // Vite dev proxy has cookie-forwarding quirks.
-        setAuth(res.data.user, (res.data as any).token ?? null);
+        setAuth(res.data.user, (res.data as any).token ?? null, res.data.billingEnabled);
       } else {
         clearAuth();
       }

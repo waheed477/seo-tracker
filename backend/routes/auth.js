@@ -91,7 +91,10 @@ router.get('/me', requireAuth, async (req, res) => {
   // Return the current access token alongside user info so the frontend
   // can re-hydrate its in-memory token store (Zustand) on page refresh.
   const token = req.cookies?.accessToken ?? req.headers.authorization?.slice(7) ?? null;
-  res.json({ success: true, data: { user: { id: req.user.id, email: req.user.email, name: req.user.name }, token } });
+  // BILLING_ENABLED defaults to true if unset. Set to 'false' in Render env vars
+  // to temporarily disable billing/upgrade flow (e.g. while Stripe is being configured).
+  const billingEnabled = process.env.BILLING_ENABLED !== 'false';
+  res.json({ success: true, data: { user: { id: req.user.id, email: req.user.email, name: req.user.name }, token, billingEnabled } });
 });
 
 // ── POST /api/auth/register ───────────────────────────────────────────────────

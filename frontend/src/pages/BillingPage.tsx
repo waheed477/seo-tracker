@@ -8,7 +8,8 @@ import LoadingSkeleton from '../components/ui/LoadingSkeleton';
 export default function BillingPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-    const addToast = useToastStore((s) => s.addToast);
+  const addToast = useToastStore((s) => s.addToast);
+  const billingEnabled = useAuthStore((s) => s.billingEnabled);
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -129,8 +130,11 @@ export default function BillingPage() {
                     ⚠ Payment overdue — please update your payment method
                   </p>
                 )}
-                {ws.plan === 'free' && (
+                {ws.plan === 'free' && billingEnabled && (
                   <p className="text-[var(--color-text-tertiary)] mt-1 text-xs">Max 1 site · Upgrade for unlimited</p>
+                )}
+                {ws.plan === 'free' && !billingEnabled && (
+                  <p className="text-[var(--color-text-tertiary)] mt-1 text-xs">All limits removed while billing is being configured</p>
                 )}
                 {ws.plan === 'pro' && ws.planStatus === 'active' && (
                   <p className="text-[var(--color-text-tertiary)] mt-1 text-xs">Unlimited sites · All features unlocked</p>
@@ -138,7 +142,11 @@ export default function BillingPage() {
               </div>
 
               <div>
-                {ws.plan === 'pro' ? (
+                {!billingEnabled ? (
+                  <span className="text-[var(--color-text-tertiary)] bg-[var(--color-surface-hover)] border-[var(--color-border)] rounded-lg border px-3 py-1.5 text-[10px] sm:text-xs">
+                    Billing temporarily disabled
+                  </span>
+                ) : ws.plan === 'pro' ? (
                   <button
                     onClick={() => handleManageBilling(ws._id)}
                     disabled={loadingWs === ws._id}

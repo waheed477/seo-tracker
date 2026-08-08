@@ -45,7 +45,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<ApiR
               // Store the new token + user in Zustand so the Authorization header
               // is correct on the immediately-following retry.
               if (body?.data?.token && body?.data?.user) {
-                useAuthStore.getState().setAuth(body.data.user, body.data.token);
+                useAuthStore.getState().setAuth(body.data.user, body.data.token, body.data.billingEnabled);
               }
               return true;
             }
@@ -88,6 +88,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<ApiR
 export interface AuthPayload {
   token: string;
   user: { id: string; email: string; name: string };
+  billingEnabled?: boolean;
 }
 
 export const authApi = {
