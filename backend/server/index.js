@@ -72,10 +72,9 @@ if (process.env.NODE_ENV === 'production') {
   const frontendDist = path.resolve(__dirname, '../../frontend/dist');
   app.use(express.static(frontendDist));
 
-  // SPA fallback — any non-/api route returns index.html so React Router can handle it
-  app.get('*', (_req, res, next) => {
-    // Skip API routes (they're handled above)
-    if (_req.path.startsWith('/api')) return next();
+  // SPA fallback — any non-API route returns index.html so React Router can handle it
+  // Using '/*splat' instead of '*' — required for Express 5 / path-to-regexp v6+
+  app.get('/*splat', (_req, res) => {
     res.sendFile(path.join(frontendDist, 'index.html'));
   });
 }
